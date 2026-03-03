@@ -172,12 +172,9 @@
                 </ul>
             </div>
 
-            <form action="{{ route('student.exam.start') }}" method="POST" id="startForm">
-                @csrf
-                <button type="button" class="btn-start" id="btnStart" onclick="startExamFullscreen()">
-                    <i class="fas fa-play-circle"></i> Mulai Ujian
-                </button>
-            </form>
+            <button type="button" class="btn-start" id="btnStart" onclick="startExamFullscreen()">
+                <i class="fas fa-play-circle"></i> Mulai Ujian
+            </button>
         </div>
     </div>
 
@@ -187,19 +184,29 @@
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memulai ujian...';
 
-            // Request fullscreen first, then submit form
-            const el = document.documentElement;
-            const rfs = el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen;
-            if (rfs) {
-                rfs.call(el).then(function() {
-                    document.getElementById('startForm').submit();
-                }).catch(function() {
-                    // Fullscreen denied, submit anyway
-                    document.getElementById('startForm').submit();
-                });
-            } else {
-                document.getElementById('startForm').submit();
-            }
+            // 1. Set session flag via AJAX
+            fetch('{{ route("student.exam.start") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                }
+            }).then(function() {
+                // 2. Request fullscreen from user gesture
+                const el = document.documentElement;
+                const rfs = el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen;
+                if (rfs) {
+                    rfs.call(el).then(function() {
+                        window.location.href = '{{ route("student.exam") }}';
+                    }).catch(function() {
+                        window.location.href = '{{ route("student.exam") }}';
+                    });
+                } else {
+                    window.location.href = '{{ route("student.exam") }}';
+                }
+            }).catch(function() {
+                window.location.href = '{{ route("student.exam") }}';
+            });
         }
     </script>
 </body>

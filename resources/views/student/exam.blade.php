@@ -661,7 +661,7 @@
         document.addEventListener('selectstart', function(e) { e.preventDefault(); });
         document.addEventListener('dragstart', function(e) { e.preventDefault(); });
 
-        // ===== MOBILE FULLSCREEN LOCK =====
+        // ===== FULLSCREEN LOCK =====
         const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
 
         function requestFullscreen() {
@@ -682,53 +682,30 @@
             } catch(e) {}
         }
 
-        // Auto fullscreen on mobile
+        // Auto-enter fullscreen on page load (user already confirmed on previous page)
+        requestFullscreen();
+        requestWakeLock();
+
+        // Detect exit from fullscreen = lock
+        document.addEventListener('fullscreenchange', function() {
+            if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+                lockExam();
+            }
+        });
+        document.addEventListener('webkitfullscreenchange', function() {
+            if (!document.webkitFullscreenElement) {
+                lockExam();
+            }
+        });
+
         if (isMobile) {
-            document.addEventListener('click', function enterFS() {
-                requestFullscreen();
-                requestWakeLock();
-                document.removeEventListener('click', enterFS);
-            }, { once: true });
-
-            // Detect exit from fullscreen on mobile = lock
-            document.addEventListener('fullscreenchange', function() {
-                if (!document.fullscreenElement && !document.webkitFullscreenElement) {
-                    lockExam();
-                }
-            });
-            document.addEventListener('webkitfullscreenchange', function() {
-                if (!document.webkitFullscreenElement) {
-                    lockExam();
-                }
-            });
-
-            // 8. Mobile: detect touch on status/notification bar area
+            // Mobile: detect touch on status/notification bar area
             document.addEventListener('touchstart', function(e) {
                 const touch = e.touches[0];
-                // Touch at very top of screen = pulling notification bar
                 if (touch && touch.clientY < 10) {
                     lockExam();
                 }
             }, { passive: true });
-
-            // Show fullscreen prompt
-            const fsPrompt = document.createElement('div');
-            fsPrompt.id = 'fsPrompt';
-            fsPrompt.style.cssText = 'position:fixed;bottom:0;left:0;right:0;padding:16px 20px;background:rgba(59,130,246,0.95);color:white;text-align:center;z-index:150;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;';
-            fsPrompt.innerHTML = '<i class="fas fa-expand"></i> Ketuk di sini untuk masuk mode ujian fullscreen';
-            fsPrompt.onclick = function() {
-                requestFullscreen();
-                requestWakeLock();
-                fsPrompt.remove();
-            };
-            document.body.appendChild(fsPrompt);
-
-            document.addEventListener('fullscreenchange', function() {
-                if (document.fullscreenElement) {
-                    const p = document.getElementById('fsPrompt');
-                    if (p) p.remove();
-                }
-            });
         }
     </script>
 
