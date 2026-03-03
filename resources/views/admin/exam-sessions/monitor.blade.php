@@ -100,6 +100,11 @@
                                 @csrf
                                 <button class="btn btn-success btn-sm" onclick="return confirm('Buka kunci siswa ini?')"><i class="fas fa-unlock"></i> Buka Kunci</button>
                             </form>
+                        @else
+                            <form action="{{ route('admin.exam-sessions.lock-student', [$session->id, $ss->student_id]) }}" method="POST" style="display:inline;">
+                                @csrf
+                                <button class="btn btn-sm" style="background:linear-gradient(135deg,#ef4444,#b91c1c);color:#fff;" onclick="return confirm('Kunci siswa ini? Siswa tidak akan bisa melanjutkan ujian.')"><i class="fas fa-lock"></i> Kunci</button>
+                            </form>
                         @endif
                         @if($ss->status === 'mengerjakan' || $ss->is_locked)
                             <form action="{{ route('admin.exam-sessions.force-submit', [$session->id, $ss->student_id]) }}" method="POST" style="display:inline;">

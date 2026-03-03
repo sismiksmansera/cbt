@@ -309,6 +309,15 @@ class ExamSessionController extends Controller
         return back()->with('success', 'Siswa berhasil dibuka kuncinya.');
     }
 
+    public function lockStudent($id, $studentId)
+    {
+        ExamSessionStudent::where('exam_session_id', $id)
+            ->where('student_id', $studentId)
+            ->update(['is_locked' => true]);
+
+        return back()->with('success', 'Siswa berhasil dikunci.');
+    }
+
     public function forceSubmit($id, $studentId)
     {
         $session = ExamSession::findOrFail($id);
