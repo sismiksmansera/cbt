@@ -252,6 +252,30 @@ class ExamActivityController extends Controller
         }
     }
 
+    public function printCards($id)
+    {
+        $activity = ExamActivity::with(['groups.students' => function($q) {
+            $q->orderBy('nama');
+        }])->findOrFail($id);
+
+        // Build flat list of cards: each student in each group
+        $cards = [];
+        foreach ($activity->groups as $group) {
+            $nomor = 1;
+            foreach ($group->students as $student) {
+                $cards[] = [
+                    'kelompok' => $group->nama_kelompok,
+                    'nomor' => $nomor,
+                    'nama' => $student->nama,
+                    'nisn' => $student->nisn,
+                ];
+                $nomor++;
+            }
+        }
+
+        return view('admin.exam-activities.print-cards', compact('activity', 'cards'));
+    }
+
     public function destroy($id)
     {
         ExamActivity::findOrFail($id)->delete();
