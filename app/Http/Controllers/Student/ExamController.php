@@ -181,11 +181,9 @@ class ExamController extends Controller
             }
             return true;
         })->map(function($cat) {
-            $subjectName = $cat->exam->subject->nama ?? '';
-            $kategori = $cat->exam->kategori ?? '';
-            $displayName = $subjectName . ($kategori ? ' - ' . $kategori : '');
+            $subjectName = $cat->exam->subject->nama ?? 'Tidak diketahui';
             return [
-                'nama' => $displayName ?: 'Tidak diketahui',
+                'nama' => $subjectName,
                 'jumlah_soal' => $cat->display_mode === 'sebagian' ? $cat->jumlah_soal : ($cat->exam ? $cat->exam->questions()->count() : 0),
                 'mode' => $cat->display_mode,
             ];
