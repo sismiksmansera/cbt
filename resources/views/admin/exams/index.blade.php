@@ -15,7 +15,7 @@
                 <tr>
                     <td style="font-weight:600;">{{ $e->kategori }}</td>
                     <td>{{ $e->subject->nama ?? '-' }}</td>
-                    <td><span class="badge badge-info"><i class="fas fa-clock"></i> {{ $e->durasi }} mnt</span></td>
+                    <td><span class="badge badge-info"><i class="fas fa-clock"></i> {{ $e->durasi ?? '-' }} mnt</span></td>
                     <td><span class="badge badge-purple">{{ $e->questions_count }} soal</span></td>
                     <td>{{ $e->passing_grade }}</td>
                     <td><span class="badge {{ $e->is_active ? 'badge-success' : 'badge-danger' }}">{{ $e->is_active ? 'Aktif' : 'Nonaktif' }}</span></td>

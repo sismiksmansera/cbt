@@ -321,6 +321,27 @@ class QuestionController extends Controller
             if (!is_dir($dir)) mkdir($dir, 0755, true);
 
             $imageSource = $imageElement->getSource();
+
+            // Handle zip:// archive sources (most common for Word imports)
+            if (strpos($imageSource, 'zip://') === 0) {
+                $source = substr($imageSource, 6); // remove "zip://"
+                [$zipFile, $entryName] = explode('#', $source, 2);
+
+                $zip = new \ZipArchive();
+                if ($zip->open($zipFile) === true) {
+                    $imageData = $zip->getFromName($entryName);
+                    $zip->close();
+
+                    if ($imageData && strlen($imageData) > 0) {
+                        $ext = pathinfo($entryName, PATHINFO_EXTENSION) ?: 'png';
+                        $filename = 'import_' . time() . '_' . $this->imageCounter . '.' . $ext;
+                        file_put_contents($dir . '/' . $filename, $imageData);
+                        return '/images/questions/' . $filename;
+                    }
+                }
+            }
+
+            // Handle local file sources
             if ($imageSource && file_exists($imageSource)) {
                 $ext = pathinfo($imageSource, PATHINFO_EXTENSION) ?: 'png';
                 $filename = 'import_' . time() . '_' . $this->imageCounter . '.' . $ext;
@@ -328,8 +349,9 @@ class QuestionController extends Controller
                 return '/images/questions/' . $filename;
             }
 
+            // Fallback: try getImageStringData
             if (method_exists($imageElement, 'getImageStringData')) {
-                $data = $imageElement->getImageStringData(true);
+                $data = @$imageElement->getImageStringData(true);
                 if ($data) {
                     $filename = 'import_' . time() . '_' . $this->imageCounter . '.png';
                     file_put_contents($dir . '/' . $filename, base64_decode($data));

@@ -27,7 +27,7 @@ class ExamController extends Controller
         $request->validate([
             'kategori' => 'required',
             'subject_id' => 'required|exists:subjects,id',
-            'durasi' => 'required|integer|min:1',
+            'durasi' => 'nullable|integer|min:1',
         ]);
 
         Exam::create(array_merge($request->only(
@@ -51,7 +51,7 @@ class ExamController extends Controller
         $request->validate([
             'kategori' => 'required',
             'subject_id' => 'required|exists:subjects,id',
-            'durasi' => 'required|integer|min:1',
+            'durasi' => 'nullable|integer|min:1',
         ]);
 
         $data = $request->only('kategori', 'subject_id', 'deskripsi', 'durasi', 'passing_grade', 'show_result');

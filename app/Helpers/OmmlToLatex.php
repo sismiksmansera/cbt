@@ -60,10 +60,142 @@ class OmmlToLatex
             self::replaceMathWithText($doc, $math, '\\( ' . $latex . ' \\)');
         }
 
+        // Unwrap mc:AlternateContent → keep mc:Choice content (has w:drawing with images)
+        // PhpWord only reads Fallback as text, losing all images
+        $xpath->registerNamespace('mc', 'http://schemas.openxmlformats.org/markup-compatibility/2006');
+        $altContents = $xpath->query('//mc:AlternateContent');
+        foreach ($altContents as $ac) {
+            $parent = $ac->parentNode;
+            if (!$parent) continue;
+            // Find mc:Choice and insert its children before mc:AlternateContent
+            foreach ($ac->childNodes as $child) {
+                if ($child instanceof DOMElement && $child->localName === 'Choice') {
+                    foreach ($child->childNodes as $choiceChild) {
+                        $parent->insertBefore($choiceChild->cloneNode(true), $ac);
+                    }
+                    break;
+                }
+            }
+            $parent->removeChild($ac);
+        }
+
         $zip->addFromString('word/document.xml', $doc->saveXML());
         $zip->close();
 
+        // Convert unsupported image formats (EMF, WMF) to PNG
+        self::convertUnsupportedImages($tempPath);
+
         return $tempPath;
+    }
+    /**
+     * Convert unsupported image formats (EMF, WMF) to PNG inside a .docx zip.
+     */
+    private static function convertUnsupportedImages(string $docxPath): void
+    {
+        $zip = new \ZipArchive();
+        if ($zip->open($docxPath) !== true) return;
+
+        // Find all EMF/WMF files
+        $unsupported = [];
+        for ($i = 0; $i < $zip->numFiles; $i++) {
+            $name = $zip->getNameIndex($i);
+            if (preg_match('/word\/media\/.*\.(emf|wmf)$/i', $name)) {
+                $unsupported[] = $name;
+            }
+        }
+
+        if (empty($unsupported)) {
+            $zip->close();
+            return;
+        }
+
+        $converted = [];
+        foreach ($unsupported as $file) {
+            $imageData = $zip->getFromName($file);
+            if (!$imageData) continue;
+
+            $pngData = self::convertImageToPng($imageData, pathinfo($file, PATHINFO_EXTENSION));
+            $pngName = preg_replace('/\.(emf|wmf)$/i', '.png', $file);
+
+            if ($pngData) {
+                $zip->addFromString($pngName, $pngData);
+                $zip->deleteName($file);
+                $converted[basename($file)] = basename($pngName);
+            }
+        }
+
+        if (empty($converted)) {
+            $zip->close();
+            return;
+        }
+
+        // Update relationships files to point to new PNG filenames
+        for ($i = 0; $i < $zip->numFiles; $i++) {
+            $name = $zip->getNameIndex($i);
+            if (preg_match('/\.rels$/i', $name)) {
+                $relsXml = $zip->getFromName($name);
+                if ($relsXml) {
+                    $modified = false;
+                    foreach ($converted as $oldName => $newName) {
+                        if (strpos($relsXml, $oldName) !== false) {
+                            $relsXml = str_replace($oldName, $newName, $relsXml);
+                            $modified = true;
+                        }
+                    }
+                    if ($modified) {
+                        $zip->addFromString($name, $relsXml);
+                    }
+                }
+            }
+        }
+
+        // Update [Content_Types].xml
+        $ctXml = $zip->getFromName('[Content_Types].xml');
+        if ($ctXml) {
+            // Add png content type if missing
+            if (stripos($ctXml, 'Extension="png"') === false) {
+                $ctXml = str_replace('</Types>',
+                    '<Default Extension="png" ContentType="image/png"/></Types>', $ctXml);
+            }
+            // Remove emf/wmf content types
+            $ctXml = preg_replace('/<Default\s+Extension="(emf|wmf)"[^\/]*\/>/i', '', $ctXml);
+            $zip->addFromString('[Content_Types].xml', $ctXml);
+        }
+
+        $zip->close();
+    }
+
+    private static function convertImageToPng(string $imageData, string $ext): ?string
+    {
+        // Try Imagick extension (fast, no external process)
+        if (extension_loaded('imagick')) {
+            try {
+                $im = new \Imagick();
+                $im->readImageBlob($imageData);
+                $im->setImageFormat('png');
+                $png = $im->getImageBlob();
+                $im->destroy();
+                return $png;
+            } catch (\Exception $e) {
+                // fall through
+            }
+        }
+
+        // Fallback: create a placeholder PNG (instant, no external tools)
+        $img = @imagecreatetruecolor(300, 60);
+        if ($img) {
+            $white = imagecolorallocate($img, 255, 255, 255);
+            imagefill($img, 0, 0, $white);
+            $gray = imagecolorallocate($img, 150, 150, 150);
+            imagestring($img, 4, 20, 22, '[Gambar: format ' . strtoupper($ext) . ']', $gray);
+            ob_start();
+            imagepng($img);
+            $png = ob_get_clean();
+            imagedestroy($img);
+            return $png;
+        }
+
+        return null;
     }
 
     private static function replaceMathWithText(DOMDocument $doc, DOMNode $mathNode, string $text): void
