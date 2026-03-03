@@ -588,10 +588,13 @@
         }
 
         // ===== ANTI-CHEAT SECURITY =====
+        let examLocked = false;
+        const initialWidth = window.innerWidth;
+        const initialHeight = window.innerHeight;
 
         function lockExam() {
-            // Prevent double lock
-            if (document.getElementById('lockOverlay').style.display === 'flex') return;
+            if (examLocked) return;
+            examLocked = true;
 
             // Show lock overlay
             document.getElementById('lockOverlay').style.display = 'flex';
@@ -607,19 +610,43 @@
             });
         }
 
-        // Only detect ACTUAL tab switch / window minimize (not Alt/Win key presses)
+        // 1. Tab switch / minimize detection (works on both desktop & mobile)
         document.addEventListener('visibilitychange', function() {
             if (document.hidden) {
                 lockExam();
             }
         });
 
-        // Prevent right-click
+        // 2. Window blur — detects losing focus (desktop: clicking outside browser, alt-tab)
+        window.addEventListener('blur', function() {
+            lockExam();
+        });
+
+        // 3. Split-screen / multi-window detection — screen resize beyond threshold
+        let resizeTimer = null;
+        window.addEventListener('resize', function() {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(function() {
+                const widthDiff = Math.abs(window.innerWidth - initialWidth);
+                const heightDiff = Math.abs(window.innerHeight - initialHeight);
+                // Significant resize = likely split-screen (more than 15% change)
+                if (widthDiff > initialWidth * 0.15 || heightDiff > initialHeight * 0.15) {
+                    lockExam();
+                }
+            }, 300);
+        });
+
+        // 4. Detect Picture-in-Picture or page hide
+        window.addEventListener('pagehide', function() {
+            lockExam();
+        });
+
+        // 5. Prevent right-click
         document.addEventListener('contextmenu', function(e) {
             e.preventDefault();
         });
 
-        // Prevent keyboard shortcuts (copy, inspect, etc.) but DON'T lock
+        // 6. Prevent keyboard shortcuts (copy, inspect, etc.)
         document.addEventListener('keydown', function(e) {
             if (
                 (e.ctrlKey && ['c','v','a','u','s','p'].includes(e.key.toLowerCase())) ||
@@ -629,6 +656,10 @@
                 e.preventDefault();
             }
         });
+
+        // 7. Prevent text selection and drag
+        document.addEventListener('selectstart', function(e) { e.preventDefault(); });
+        document.addEventListener('dragstart', function(e) { e.preventDefault(); });
 
         // ===== MOBILE FULLSCREEN LOCK =====
         const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
@@ -653,7 +684,6 @@
 
         // Auto fullscreen on mobile
         if (isMobile) {
-            // Request fullscreen on first user interaction
             document.addEventListener('click', function enterFS() {
                 requestFullscreen();
                 requestWakeLock();
@@ -672,6 +702,15 @@
                 }
             });
 
+            // 8. Mobile: detect touch on status/notification bar area
+            document.addEventListener('touchstart', function(e) {
+                const touch = e.touches[0];
+                // Touch at very top of screen = pulling notification bar
+                if (touch && touch.clientY < 10) {
+                    lockExam();
+                }
+            }, { passive: true });
+
             // Show fullscreen prompt
             const fsPrompt = document.createElement('div');
             fsPrompt.id = 'fsPrompt';
@@ -684,7 +723,6 @@
             };
             document.body.appendChild(fsPrompt);
 
-            // Remove prompt after fullscreen entered
             document.addEventListener('fullscreenchange', function() {
                 if (document.fullscreenElement) {
                     const p = document.getElementById('fsPrompt');
