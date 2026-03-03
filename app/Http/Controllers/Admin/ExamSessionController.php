@@ -498,9 +498,8 @@ class ExamSessionController extends Controller
     {
         $session = ExamSession::with([
             'activity',
-            'sessionGroups',
+            'sessionGroups.students',
             'categories.exam.subject',
-            'questionGroups.rombels',
         ])->findOrFail($id);
 
         // Get mata pelajaran from session categories
@@ -511,12 +510,14 @@ class ExamSessionController extends Controller
             ->values()
             ->implode(', ');
 
-        // Get kelompok tes names
-        $kelompokTes = $session->sessionGroups->pluck('nama_kelompok')->implode(', ');
+        // Build groups with their students
+        $groups = $session->sessionGroups->map(function($group) {
+            return [
+                'nama' => $group->nama_kelompok,
+                'students' => $group->students->sortBy('nama')->values(),
+            ];
+        });
 
-        // Students list (belongsToMany returns Student models directly)
-        $students = $session->students()->orderBy('nama')->get();
-
-        return view('admin.exam-sessions.print-attendance', compact('session', 'subjects', 'kelompokTes', 'students'));
+        return view('admin.exam-sessions.print-attendance', compact('session', 'subjects', 'groups'));
     }
 }

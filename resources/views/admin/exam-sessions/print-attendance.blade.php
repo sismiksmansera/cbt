@@ -168,16 +168,26 @@
     </style>
 </head>
 <body>
+    @php
+        $totalStudents = $groups->sum(fn($g) => count($g['students']));
+    @endphp
     <div class="print-header-ui">
         <h2>📋 Daftar Hadir Ujian</h2>
-        <p>{{ $session->nama_sesi }} — {{ count($students) }} peserta</p>
+        <p>{{ $session->nama_sesi }} — {{ $groups->count() }} kelompok tes — {{ $totalStudents }} peserta</p>
         <button class="btn-print" onclick="window.print()">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
             Cetak Daftar Hadir
         </button>
     </div>
 
-    <div class="page">
+    @php
+        $tanggal = $session->waktu_mulai ? \Carbon\Carbon::parse($session->waktu_mulai)->translatedFormat('d F Y') : '-';
+        $waktuMulai = $session->waktu_mulai ? \Carbon\Carbon::parse($session->waktu_mulai)->format('H:i') : '-';
+        $waktuSelesai = $session->waktu_selesai ? \Carbon\Carbon::parse($session->waktu_selesai)->format('H:i') : '-';
+    @endphp
+
+    @foreach($groups as $gIdx => $group)
+    <div class="page" @if(!$loop->last) style="page-break-after:always;" @endif>
         {{-- KOP --}}
         <div class="kop">
             <img src="{{ asset('images/logo-lampung.png') }}" alt="Logo Lampung">
@@ -199,11 +209,6 @@
         </div>
 
         {{-- Info --}}
-        @php
-            $tanggal = $session->waktu_mulai ? \Carbon\Carbon::parse($session->waktu_mulai)->translatedFormat('d F Y') : '-';
-            $waktuMulai = $session->waktu_mulai ? \Carbon\Carbon::parse($session->waktu_mulai)->format('H:i') : '-';
-            $waktuSelesai = $session->waktu_selesai ? \Carbon\Carbon::parse($session->waktu_selesai)->format('H:i') : '-';
-        @endphp
         <table class="info-table">
             <tr>
                 <td class="label">Nama Sesi</td>
@@ -213,7 +218,7 @@
             <tr>
                 <td class="label">Kelompok Tes</td>
                 <td class="sep">:</td>
-                <td>{{ $kelompokTes ?: '-' }}</td>
+                <td><strong>{{ $group['nama'] }}</strong></td>
             </tr>
             <tr>
                 <td class="label">Tanggal</td>
@@ -239,7 +244,7 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach($students as $i => $student)
+                @foreach($group['students'] as $i => $student)
                 <tr>
                     <td class="center">{{ $i + 1 }}</td>
                     <td class="center">{{ $student->nisn }}</td>
@@ -262,5 +267,6 @@
             </div>
         </div>
     </div>
+    @endforeach
 </body>
 </html>
