@@ -13,7 +13,7 @@ class StudentLoginController extends Controller
     public function showLoginForm()
     {
         if (session('student_id') && session('exam_session_id')) {
-            return redirect()->route('student.exam');
+            return redirect()->route('student.exam.confirm');
         }
         return view('auth.student-login');
     }
@@ -84,7 +84,7 @@ class StudentLoginController extends Controller
             'exam_session_id' => $session->id,
         ]);
 
-        return redirect()->route('student.exam');
+        return redirect()->route('student.exam.confirm');
     }
 
     public function logout()

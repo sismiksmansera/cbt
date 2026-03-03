@@ -125,10 +125,53 @@ class ExamController extends Controller
                 })->values();
     }
 
+    public function confirm()
+    {
+        $sessionId = session('exam_session_id');
+        $studentId = session('student_id');
+
+        $session = ExamSession::with('categories.exam')->findOrFail($sessionId);
+        $student = Student::findOrFail($studentId);
+
+        $pivot = ExamSessionStudent::where('exam_session_id', $sessionId)
+                ->where('student_id', $studentId)
+                ->firstOrFail();
+
+        if ($pivot->status === 'selesai') {
+            $result = ExamResult::where('exam_session_id', $sessionId)
+                        ->where('student_id', $studentId)->first();
+            return view('student.result', compact('session', 'result'));
+        }
+
+        // Get subjects/categories for this session
+        $categories = $session->categories->map(function($cat) {
+            return [
+                'nama' => $cat->exam->nama ?? 'Tidak diketahui',
+                'jumlah_soal' => $cat->display_mode === 'sebagian' ? $cat->jumlah_soal : ($cat->exam ? $cat->exam->questions()->count() : 0),
+                'mode' => $cat->display_mode,
+            ];
+        });
+
+        $durasi = $session->durasi ?? 60;
+
+        return view('student.confirm', compact('session', 'student', 'categories', 'durasi', 'pivot'));
+    }
+
+    public function startExam()
+    {
+        session(['exam_confirmed' => true]);
+        return redirect()->route('student.exam');
+    }
+
     public function index()
     {
         $sessionId = session('exam_session_id');
         $studentId = session('student_id');
+
+        // Redirect to confirm page if not confirmed yet
+        if (!session('exam_confirmed')) {
+            return redirect()->route('student.exam.confirm');
+        }
 
         $session = ExamSession::with('categories.exam')->findOrFail($sessionId);
 

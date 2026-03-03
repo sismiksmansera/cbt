@@ -113,6 +113,8 @@ Route::prefix('admin')->name('admin.')->middleware('check.admin')->group(functio
 
 // Student Exam Routes
 Route::prefix('student')->name('student.')->middleware('check.student')->group(function () {
+    Route::get('/exam/confirm', [StudentExamController::class, 'confirm'])->name('exam.confirm');
+    Route::post('/exam/start', [StudentExamController::class, 'startExam'])->name('exam.start');
     Route::get('/exam', [StudentExamController::class, 'index'])->name('exam');
     Route::post('/exam/save-answer', [StudentExamController::class, 'saveAnswer'])->name('exam.save-answer');
     Route::post('/exam/toggle-flag', [StudentExamController::class, 'toggleFlag'])->name('exam.toggle-flag');
