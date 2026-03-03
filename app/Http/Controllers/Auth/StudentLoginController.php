@@ -50,7 +50,7 @@ class StudentLoginController extends Controller
 
         // Check if student is locked
         if ($pivot->is_locked) {
-            return back()->withErrors(['login' => 'Akun Anda terkunci karena terdeteksi melakukan aktivitas di luar ujian. Hubungi pengawas untuk membuka kunci.']);
+            return back()->withErrors(['login' => 'Akun Anda terkunci. Hubungi pengawas untuk membuka kunci.']);
         }
 
         // Check attendance confirmation
