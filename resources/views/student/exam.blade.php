@@ -236,22 +236,14 @@
 <body>
     <!-- Top Bar -->
     <div class="exam-topbar">
-        <div class="exam-info">
-            <h3>{{ $session->nama_sesi }}</h3>
-            <p>{{ $questions->count() }} soal</p>
-        </div>
+        <button class="flag-btn" id="sidebarToggle" onclick="document.querySelector('.exam-sidebar').classList.toggle('open')" style="font-size:18px;padding:10px 14px;">
+            <i class="fas fa-th"></i>
+        </button>
         <div class="timer" id="timerBox">
             <i class="fas fa-clock timer-icon"></i>
             <span class="timer-text" id="timerDisplay">--:--</span>
         </div>
-        <div style="display:flex;align-items:center;gap:12px;">
-            <button class="flag-btn" onclick="document.querySelector('.exam-sidebar').classList.toggle('open')" style="display:none;" id="sidebarToggle">
-                <i class="fas fa-th"></i>
-            </button>
-            <div style="font-size:13px;color:var(--text-sec);">
-                <i class="fas fa-user"></i> {{ session('student_name') }}
-            </div>
-        </div>
+        <div style="width:44px;"></div>
     </div>
 
     <div class="exam-layout">
@@ -582,10 +574,6 @@
 
         updateStats();
 
-        // Show sidebar toggle on mobile
-        if (window.innerWidth <= 768) {
-            document.getElementById('sidebarToggle').style.display = 'block';
-        }
 
         // ===== ANTI-CHEAT SECURITY =====
         let examLocked = false;
