@@ -493,4 +493,32 @@ class ExamSessionController extends Controller
             'students' => $students,
         ]);
     }
+
+    public function printAttendance($id)
+    {
+        $session = ExamSession::with([
+            'activity',
+            'sessionGroups',
+            'students' => function($q) { $q->orderBy('nama'); },
+            'students.student',
+            'categories.exam.subject',
+            'questionGroups.rombels',
+        ])->findOrFail($id);
+
+        // Get mata pelajaran from session categories
+        $subjects = $session->categories
+            ->map(fn($c) => $c->exam->subject->nama ?? null)
+            ->filter()
+            ->unique()
+            ->values()
+            ->implode(', ');
+
+        // Get kelompok tes names
+        $kelompokTes = $session->sessionGroups->pluck('nama_kelompok')->implode(', ');
+
+        // Students list
+        $students = $session->students->map(fn($ss) => $ss->student)->filter()->sortBy('nama')->values();
+
+        return view('admin.exam-sessions.print-attendance', compact('session', 'subjects', 'kelompokTes', 'students'));
+    }
 }

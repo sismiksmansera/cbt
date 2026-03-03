@@ -70,6 +70,7 @@
                                 <button class="btn btn-success btn-sm" onclick="return confirm('Mulai kembali sesi ini? Semua data ujian siswa akan direset!')" title="Mulai Kembali"><i class="fas fa-redo"></i></button>
                             </form>
                             @endif
+                            <a href="{{ route('admin.exam-sessions.print-attendance', $s->id) }}" class="btn btn-sm" style="background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;" title="Cetak Daftar Hadir" target="_blank"><i class="fas fa-clipboard-list"></i></a>
                             <form action="{{ route('admin.exam-sessions.destroy', $s->id) }}" method="POST" onsubmit="return confirm('Hapus sesi?')">@csrf @method('DELETE')
                                 <button class="btn btn-danger btn-icon btn-sm"><i class="fas fa-trash"></i></button>
                             </form>

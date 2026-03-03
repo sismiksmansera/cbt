@@ -96,6 +96,7 @@ Route::prefix('admin')->name('admin.')->middleware('check.admin')->group(functio
     Route::post('/exam-sessions/{id}/add-student', [ExamSessionController::class, 'addStudent'])->name('exam-sessions.add-student');
     Route::delete('/exam-sessions/{id}/remove-student/{studentId}', [ExamSessionController::class, 'removeStudent'])->name('exam-sessions.remove-student');
     Route::post('/exam-sessions/{id}/sync-groups', [ExamSessionController::class, 'syncGroups'])->name('exam-sessions.sync-groups');
+    Route::get('/exam-sessions/{id}/print-attendance', [ExamSessionController::class, 'printAttendance'])->name('exam-sessions.print-attendance');
 
     // Exam Activities
     Route::get('/exam-activities', [ExamActivityController::class, 'index'])->name('exam-activities.index');
