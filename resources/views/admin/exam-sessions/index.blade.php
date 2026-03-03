@@ -55,24 +55,24 @@
                         @else<span class="badge badge-danger">Selesai</span>@endif
                     </td>
                     <td>
-                        <div style="display:flex;gap:4px;flex-wrap:wrap;">
-                            <a href="{{ route('admin.exam-sessions.monitor', $s->id) }}" class="btn btn-outline btn-sm" title="Monitor"><i class="fas fa-tv"></i></a>
-                            <a href="{{ route('admin.exam-sessions.edit', $s->id) }}" class="btn btn-info btn-sm" title="Edit"><i class="fas fa-pencil-alt"></i></a>
+                        <div style="display:flex;gap:4px;flex-wrap:wrap;align-items:center;">
+                            <a href="{{ route('admin.exam-sessions.edit', $s->id) }}" class="btn btn-sm" style="background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;min-width:30px;text-align:center;" title="Edit"><i class="fas fa-pencil-alt"></i></a>
+                            <a href="{{ route('admin.exam-sessions.monitor', $s->id) }}" class="btn btn-sm" style="background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff;min-width:30px;text-align:center;" title="Monitor"><i class="fas fa-tv"></i></a>
                             <form action="{{ route('admin.exam-sessions.toggle-status', $s->id) }}" method="POST">@csrf
                                 @if($s->status === 'pending')
-                                    <button class="btn btn-success btn-sm" title="Aktifkan"><i class="fas fa-play"></i></button>
+                                    <button class="btn btn-sm" style="background:linear-gradient(135deg,#10b981,#059669);color:#fff;min-width:30px;text-align:center;" title="Aktifkan"><i class="fas fa-play"></i></button>
                                 @elseif($s->status === 'active')
-                                    <button class="btn btn-warning btn-sm" onclick="return confirm('Akhiri sesi ini?')" title="Akhiri"><i class="fas fa-stop"></i></button>
+                                    <button class="btn btn-sm" style="background:linear-gradient(135deg,#f59e0b,#b45309);color:#fff;min-width:30px;text-align:center;" onclick="return confirm('Akhiri sesi ini?')" title="Akhiri"><i class="fas fa-stop"></i></button>
                                 @endif
                             </form>
                             @if($s->status === 'finished')
                             <form action="{{ route('admin.exam-sessions.restart', $s->id) }}" method="POST">@csrf
-                                <button class="btn btn-success btn-sm" onclick="return confirm('Mulai kembali sesi ini? Semua data ujian siswa akan direset!')" title="Mulai Kembali"><i class="fas fa-redo"></i></button>
+                                <button class="btn btn-sm" style="background:linear-gradient(135deg,#10b981,#059669);color:#fff;min-width:30px;text-align:center;" onclick="return confirm('Mulai kembali sesi ini? Semua data ujian siswa akan direset!')" title="Mulai Kembali"><i class="fas fa-redo"></i></button>
                             </form>
                             @endif
-                            <a href="{{ route('admin.exam-sessions.print-attendance', $s->id) }}" class="btn btn-sm" style="background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;" title="Cetak Daftar Hadir" target="_blank"><i class="fas fa-clipboard-list"></i></a>
+                            <a href="{{ route('admin.exam-sessions.print-attendance', $s->id) }}" class="btn btn-sm" style="background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;min-width:30px;text-align:center;" title="Cetak Daftar Hadir" target="_blank"><i class="fas fa-clipboard-list"></i></a>
                             <form action="{{ route('admin.exam-sessions.destroy', $s->id) }}" method="POST" onsubmit="return confirm('Hapus sesi?')">@csrf @method('DELETE')
-                                <button class="btn btn-danger btn-icon btn-sm"><i class="fas fa-trash"></i></button>
+                                <button class="btn btn-sm" style="background:linear-gradient(135deg,#ef4444,#b91c1c);color:#fff;min-width:30px;text-align:center;"><i class="fas fa-trash"></i></button>
                             </form>
                         </div>
                     </td>
