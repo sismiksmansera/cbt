@@ -60,20 +60,31 @@
         }
 
         .card-kop {
-            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 3mm;
             border-bottom: 1.5px solid #333;
-            padding-bottom: 3mm;
+            padding-bottom: 2mm;
             margin-bottom: 3mm;
+        }
+        .card-kop img {
+            width: 10mm;
+            height: auto;
+        }
+        .card-kop .kop-text {
+            text-align: center;
+            flex: 1;
         }
         .card-kop .kop-title {
             font-weight: bold;
-            font-size: 11pt;
+            font-size: 10pt;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
         .card-kop .kop-kegiatan {
-            font-size: 9pt;
-            margin-top: 1mm;
+            font-size: 8pt;
+            margin-top: 0.5mm;
         }
 
         .card-body {
@@ -102,22 +113,11 @@
 
         .card-footer {
             border-top: 1px solid #999;
-            padding-top: 2mm;
-            margin-top: 2mm;
-            font-size: 8pt;
-            text-align: right;
-            line-height: 1.4;
-        }
-        .card-footer .ttd-area {
-            margin-top: 8mm;
-        }
-        .card-footer .nama-kepsek {
-            font-weight: bold;
-            text-decoration: underline;
-            font-size: 8.5pt;
-        }
-        .card-footer .nip {
+            padding-top: 1.5mm;
+            margin-top: 1.5mm;
             font-size: 7.5pt;
+            text-align: center;
+            color: #555;
         }
     </style>
 </head>
@@ -141,8 +141,12 @@
         @foreach($chunk as $card)
         <div class="card">
             <div class="card-kop">
-                <div class="kop-title">Kartu Ujian</div>
-                <div class="kop-kegiatan">{{ $activity->nama_kegiatan }}</div>
+                <img src="{{ asset('images/logo-sekolah.png') }}" alt="Logo Sekolah">
+                <div class="kop-text">
+                    <div class="kop-title">Kartu Ujian</div>
+                    <div class="kop-kegiatan">{{ $activity->nama_kegiatan }}</div>
+                </div>
+                <img src="{{ asset('images/logo-lampung.png') }}" alt="Logo Lampung">
             </div>
             <div class="card-body">
                 <div class="kelompok-nomor">{{ $card['kelompok'] }} - {{ $card['nomor'] }}</div>
@@ -150,11 +154,7 @@
                 <div class="nisn">{{ $card['nisn'] }}</div>
             </div>
             <div class="card-footer">
-                Seputih Raman, {{ $tanggal }}<br>
-                Kepala Sekolah<br>
-                <div class="ttd-area"></div>
-                <div class="nama-kepsek">HARYONO, S.Sos, M.Pd</div>
-                <div class="nip">NIP. 19770418 200604 1 009</div>
+                https://cbt.smansera.app/
             </div>
         </div>
         @endforeach
