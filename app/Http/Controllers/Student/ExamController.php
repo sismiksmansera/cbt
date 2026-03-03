@@ -130,7 +130,7 @@ class ExamController extends Controller
         $sessionId = session('exam_session_id');
         $studentId = session('student_id');
 
-        $session = ExamSession::with(['categories.exam', 'questionGroups.rombels'])->findOrFail($sessionId);
+        $session = ExamSession::with(['categories.exam.subject', 'questionGroups.rombels'])->findOrFail($sessionId);
         $student = Student::findOrFail($studentId);
 
         $pivot = ExamSessionStudent::where('exam_session_id', $sessionId)
@@ -172,7 +172,7 @@ class ExamController extends Controller
         if ($matchedGroupId) {
             $query->where('question_group_id', $matchedGroupId);
         }
-        $sessionCategories = $query->with('exam')->get();
+        $sessionCategories = $query->with('exam.subject')->get();
 
         // Filter by agama and map to display data
         $categories = $sessionCategories->filter(function($cat) use ($student) {
@@ -181,8 +181,11 @@ class ExamController extends Controller
             }
             return true;
         })->map(function($cat) {
+            $subjectName = $cat->exam->subject->nama ?? '';
+            $kategori = $cat->exam->kategori ?? '';
+            $displayName = $subjectName . ($kategori ? ' - ' . $kategori : '');
             return [
-                'nama' => $cat->exam->nama ?? 'Tidak diketahui',
+                'nama' => $displayName ?: 'Tidak diketahui',
                 'jumlah_soal' => $cat->display_mode === 'sebagian' ? $cat->jumlah_soal : ($cat->exam ? $cat->exam->questions()->count() : 0),
                 'mode' => $cat->display_mode,
             ];
