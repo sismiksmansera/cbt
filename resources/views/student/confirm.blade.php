@@ -184,29 +184,35 @@
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memulai ujian...';
 
-            // 1. Set session flag via AJAX
-            fetch('{{ route("student.exam.start") }}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                }
-            }).then(function() {
-                // 2. Request fullscreen from user gesture
-                const el = document.documentElement;
-                const rfs = el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen;
-                if (rfs) {
-                    rfs.call(el).then(function() {
-                        window.location.href = '{{ route("student.exam") }}';
-                    }).catch(function() {
-                        window.location.href = '{{ route("student.exam") }}';
-                    });
-                } else {
+            // MUST request fullscreen FIRST - directly from user click (sync)
+            const el = document.documentElement;
+            const rfs = el.requestFullscreen || el.webkitRequestFullscreen || el.webkitEnterFullscreen || el.mozRequestFullScreen || el.msRequestFullscreen;
+
+            function doStart() {
+                fetch('{{ route("student.exam.start") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    }
+                }).then(function() {
                     window.location.href = '{{ route("student.exam") }}';
+                }).catch(function() {
+                    window.location.href = '{{ route("student.exam") }}';
+                });
+            }
+
+            if (rfs) {
+                var p = rfs.call(el);
+                if (p && p.then) {
+                    p.then(doStart).catch(doStart);
+                } else {
+                    // Older browsers (webkit) don't return a promise
+                    setTimeout(doStart, 300);
                 }
-            }).catch(function() {
-                window.location.href = '{{ route("student.exam") }}';
-            });
+            } else {
+                doStart();
+            }
         }
     </script>
 </body>
