@@ -36,24 +36,24 @@
 @endphp
 
 <div class="stat-grid" style="margin-bottom:24px;">
-    <div class="stat-card">
+    <div class="stat-card" data-filter="all" onclick="filterStudents('all')" style="cursor:pointer;transition:all .2s;">
         <div class="stat-icon blue"><i class="fas fa-users"></i></div>
         <div><div class="stat-value">{{ $total }}</div><div class="stat-label">Total Peserta</div></div>
     </div>
-    <div class="stat-card">
+    <div class="stat-card" data-filter="belum_mulai" onclick="filterStudents('belum_mulai')" style="cursor:pointer;transition:all .2s;">
         <div class="stat-icon orange"><i class="fas fa-hourglass-half"></i></div>
         <div><div class="stat-value">{{ $waiting }}</div><div class="stat-label">Belum Mulai</div></div>
     </div>
-    <div class="stat-card">
+    <div class="stat-card" data-filter="mengerjakan" onclick="filterStudents('mengerjakan')" style="cursor:pointer;transition:all .2s;">
         <div class="stat-icon purple"><i class="fas fa-pencil-alt"></i></div>
         <div><div class="stat-value">{{ $working }}</div><div class="stat-label">Mengerjakan</div></div>
     </div>
-    <div class="stat-card">
+    <div class="stat-card" data-filter="selesai" onclick="filterStudents('selesai')" style="cursor:pointer;transition:all .2s;">
         <div class="stat-icon green"><i class="fas fa-check-circle"></i></div>
         <div><div class="stat-value">{{ $done }}</div><div class="stat-label">Selesai</div></div>
     </div>
     @if($locked > 0)
-    <div class="stat-card" style="border-color:rgba(239,68,68,0.3);">
+    <div class="stat-card" data-filter="terkunci" onclick="filterStudents('terkunci')" style="border-color:rgba(239,68,68,0.3);cursor:pointer;transition:all .2s;">
         <div class="stat-icon" style="background:rgba(239,68,68,0.15);"><i class="fas fa-lock" style="color:var(--danger);"></i></div>
         <div><div class="stat-value" style="color:var(--danger);">{{ $locked }}</div><div class="stat-label">Terkunci</div></div>
     </div>
@@ -61,13 +61,18 @@
 </div>
 
 <div class="card">
-    <div class="card-header"><h3>Status Peserta</h3></div>
+    <div class="card-header">
+        <h3>Status Peserta</h3>
+        <span id="filter-badge" style="display:none;font-size:12px;padding:4px 12px;border-radius:20px;background:rgba(124,58,237,0.15);color:#7c3aed;font-weight:600;cursor:pointer;" onclick="filterStudents('all')">
+            <span id="filter-text"></span> &times;
+        </span>
+    </div>
     <div class="card-body">
         <table>
             <thead><tr><th>Nama</th><th>NISN</th><th>Kelas</th><th>Status</th><th>Login</th><th>Waktu Mulai</th><th>Waktu Selesai</th><th>Aksi</th></tr></thead>
-            <tbody>
+            <tbody id="student-tbody">
                 @foreach($sessionStudents as $ss)
-                <tr style="{{ $ss->is_locked ? 'background:rgba(239,68,68,0.05);' : '' }}">
+                <tr class="student-row" data-status="{{ $ss->status }}" data-locked="{{ $ss->is_locked ? '1' : '0' }}" style="{{ $ss->is_locked ? 'background:rgba(239,68,68,0.05);' : '' }}">
                     <td style="font-weight:600;">
                         {{ $ss->student->nama ?? '-' }}
                         @if($ss->is_locked)
@@ -110,4 +115,61 @@
         </table>
     </div>
 </div>
+
+<script>
+let activeFilter = 'all';
+
+function filterStudents(filter) {
+    activeFilter = filter;
+    const rows = document.querySelectorAll('.student-row');
+    const cards = document.querySelectorAll('.stat-card');
+    const badge = document.getElementById('filter-badge');
+    const filterText = document.getElementById('filter-text');
+
+    // Highlight active card
+    cards.forEach(card => {
+        if (card.dataset.filter === filter) {
+            card.style.outline = '2px solid #7c3aed';
+            card.style.outlineOffset = '-2px';
+            card.style.transform = 'scale(1.03)';
+        } else {
+            card.style.outline = 'none';
+            card.style.transform = 'scale(1)';
+        }
+    });
+
+    // Show/hide filter badge
+    if (filter === 'all') {
+        badge.style.display = 'none';
+    } else {
+        const labels = {
+            'belum_mulai': 'Belum Mulai',
+            'mengerjakan': 'Mengerjakan',
+            'selesai': 'Selesai',
+            'terkunci': 'Terkunci'
+        };
+        filterText.textContent = 'Filter: ' + (labels[filter] || filter);
+        badge.style.display = 'inline-block';
+    }
+
+    // Filter rows
+    let visibleCount = 0;
+    rows.forEach(row => {
+        const status = row.dataset.status;
+        const isLocked = row.dataset.locked === '1';
+        let show = false;
+
+        if (filter === 'all') {
+            show = true;
+        } else if (filter === 'terkunci') {
+            show = isLocked;
+        } else {
+            show = (status === filter);
+        }
+
+        row.style.display = show ? '' : 'none';
+        if (show) visibleCount++;
+    });
+}
+</script>
 @endsection
