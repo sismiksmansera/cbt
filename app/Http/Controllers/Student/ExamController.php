@@ -130,7 +130,7 @@ class ExamController extends Controller
         $sessionId = session('exam_session_id');
         $studentId = session('student_id');
 
-        $session = ExamSession::with('categories.exam')->findOrFail($sessionId);
+        $session = ExamSession::with(['categories.exam', 'questionGroups.rombels'])->findOrFail($sessionId);
         $student = Student::findOrFail($studentId);
 
         $pivot = ExamSessionStudent::where('exam_session_id', $sessionId)
@@ -143,8 +143,44 @@ class ExamController extends Controller
             return view('student.result', compact('session', 'result'));
         }
 
-        // Get subjects/categories for this session
-        $categories = $session->categories->map(function($cat) {
+        // Match question group based on student's rombel (same logic as getSessionQuestions)
+        $matchedGroupId = null;
+        $studentRombel = $student->kelas;
+        $studentGroupNames = [];
+
+        if ($session->exam_activity_id) {
+            $studentGroupNames = ExamActivityGroup::where('exam_activity_id', $session->exam_activity_id)
+                ->whereHas('students', fn($q) => $q->where('students.id', $studentId))
+                ->pluck('nama_kelompok')
+                ->toArray();
+        }
+
+        foreach ($session->questionGroups as $qg) {
+            $qgRombels = $qg->rombels->pluck('rombel_name')->toArray();
+            if (empty($qgRombels)) {
+                if (!$matchedGroupId) $matchedGroupId = $qg->id;
+                continue;
+            }
+            if (in_array($studentRombel, $qgRombels) || !empty(array_intersect($studentGroupNames, $qgRombels))) {
+                $matchedGroupId = $qg->id;
+                break;
+            }
+        }
+
+        // Get categories for matched group only
+        $query = ExamSessionCategory::where('exam_session_id', $sessionId)->orderBy('nomor_urut');
+        if ($matchedGroupId) {
+            $query->where('question_group_id', $matchedGroupId);
+        }
+        $sessionCategories = $query->with('exam')->get();
+
+        // Filter by agama and map to display data
+        $categories = $sessionCategories->filter(function($cat) use ($student) {
+            if ($cat->exam && $cat->exam->agama && $student->agama) {
+                return $student->agama === $cat->exam->agama;
+            }
+            return true;
+        })->map(function($cat) {
             return [
                 'nama' => $cat->exam->nama ?? 'Tidak diketahui',
                 'jumlah_soal' => $cat->display_mode === 'sebagian' ? $cat->jumlah_soal : ($cat->exam ? $cat->exam->questions()->count() : 0),
