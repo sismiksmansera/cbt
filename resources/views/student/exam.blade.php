@@ -223,6 +223,13 @@
         .btn-cancel { background: rgba(239,68,68,0.1); color: var(--danger); }
         .btn-confirm { background: var(--success); color: white; }
 
+        /* Sidebar backdrop */
+        .sidebar-backdrop {
+            display: none; position: fixed; inset: 0; top: 64px;
+            background: rgba(0,0,0,0.5); z-index: 89;
+        }
+        .sidebar-backdrop.open { display: block; }
+
         /* Responsive */
         @media (max-width: 768px) {
             .exam-sidebar { display: none; position: fixed; top: 64px; right: 0; bottom: 0; z-index: 90; width: 280px; }
@@ -236,7 +243,7 @@
 <body>
     <!-- Top Bar -->
     <div class="exam-topbar">
-        <button class="flag-btn" id="sidebarToggle" onclick="document.querySelector('.exam-sidebar').classList.toggle('open')" style="font-size:18px;padding:10px 14px;">
+        <button class="flag-btn" id="sidebarToggle" onclick="toggleSidebar()" style="font-size:18px;padding:10px 14px;">
             <i class="fas fa-th"></i>
         </button>
         <div class="timer" id="timerBox">
@@ -391,6 +398,9 @@
         </div>
     </div>
 
+    <!-- Sidebar Backdrop -->
+    <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="toggleSidebar()"></div>
+
     <!-- Submit Modal -->
     <div class="submit-modal" id="submitModal">
         <div class="submit-dialog">
@@ -429,6 +439,11 @@
         let remaining = {{ $remaining }};
         const answeredSet = new Set();
         const flaggedSet = new Set();
+
+        function toggleSidebar() {
+            document.querySelector('.exam-sidebar').classList.toggle('open');
+            document.getElementById('sidebarBackdrop').classList.toggle('open');
+        }
 
         // Initialize answered/flagged sets
         @foreach($questions as $q)
