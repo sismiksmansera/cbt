@@ -197,7 +197,7 @@ class ExamController extends Controller
     public function startExam()
     {
         session(['exam_confirmed' => true]);
-        return response()->json(['success' => true]);
+        return redirect()->route('student.exam');
     }
 
     public function index()

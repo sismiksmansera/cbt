@@ -666,7 +666,7 @@
 
         function requestFullscreen() {
             const el = document.documentElement;
-            const rfs = el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen;
+            const rfs = el.requestFullscreen || el.webkitRequestFullscreen || el.webkitEnterFullscreen || el.mozRequestFullScreen || el.msRequestFullscreen;
             if (rfs) {
                 rfs.call(el).catch(() => {});
             }
@@ -682,9 +682,12 @@
             } catch(e) {}
         }
 
-        // Auto-enter fullscreen on page load (user already confirmed on previous page)
-        requestFullscreen();
-        requestWakeLock();
+        // Enter fullscreen on first user interaction (click anywhere)
+        document.addEventListener('click', function enterFS() {
+            requestFullscreen();
+            requestWakeLock();
+            document.removeEventListener('click', enterFS);
+        }, { once: true });
 
         // Detect exit from fullscreen = lock
         document.addEventListener('fullscreenchange', function() {
@@ -706,6 +709,25 @@
                     lockExam();
                 }
             }, { passive: true });
+
+            // Show fullscreen prompt
+            const fsPrompt = document.createElement('div');
+            fsPrompt.id = 'fsPrompt';
+            fsPrompt.style.cssText = 'position:fixed;bottom:0;left:0;right:0;padding:16px 20px;background:rgba(59,130,246,0.95);color:white;text-align:center;z-index:150;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;';
+            fsPrompt.innerHTML = '<i class="fas fa-expand"></i> Ketuk di sini untuk masuk mode ujian fullscreen';
+            fsPrompt.onclick = function() {
+                requestFullscreen();
+                requestWakeLock();
+                fsPrompt.remove();
+            };
+            document.body.appendChild(fsPrompt);
+
+            document.addEventListener('fullscreenchange', function() {
+                if (document.fullscreenElement) {
+                    const p = document.getElementById('fsPrompt');
+                    if (p) p.remove();
+                }
+            });
         }
     </script>
 

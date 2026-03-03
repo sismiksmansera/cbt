@@ -172,48 +172,21 @@
                 </ul>
             </div>
 
-            <button type="button" class="btn-start" id="btnStart" onclick="startExamFullscreen()">
-                <i class="fas fa-play-circle"></i> Mulai Ujian
-            </button>
+            <form action="{{ route('student.exam.start') }}" method="POST" id="startForm">
+                @csrf
+                <button type="submit" class="btn-start" id="btnStart">
+                    <i class="fas fa-play-circle"></i> Mulai Ujian
+                </button>
+            </form>
         </div>
     </div>
 
     <script>
-        function startExamFullscreen() {
+        document.getElementById('startForm').addEventListener('submit', function() {
             const btn = document.getElementById('btnStart');
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memulai ujian...';
-
-            // MUST request fullscreen FIRST - directly from user click (sync)
-            const el = document.documentElement;
-            const rfs = el.requestFullscreen || el.webkitRequestFullscreen || el.webkitEnterFullscreen || el.mozRequestFullScreen || el.msRequestFullscreen;
-
-            function doStart() {
-                fetch('{{ route("student.exam.start") }}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                    }
-                }).then(function() {
-                    window.location.href = '{{ route("student.exam") }}';
-                }).catch(function() {
-                    window.location.href = '{{ route("student.exam") }}';
-                });
-            }
-
-            if (rfs) {
-                var p = rfs.call(el);
-                if (p && p.then) {
-                    p.then(doStart).catch(doStart);
-                } else {
-                    // Older browsers (webkit) don't return a promise
-                    setTimeout(doStart, 300);
-                }
-            } else {
-                doStart();
-            }
-        }
+        });
     </script>
 </body>
 </html>
