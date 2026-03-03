@@ -499,8 +499,6 @@ class ExamSessionController extends Controller
         $session = ExamSession::with([
             'activity',
             'sessionGroups',
-            'students' => function($q) { $q->orderBy('nama'); },
-            'students.student',
             'categories.exam.subject',
             'questionGroups.rombels',
         ])->findOrFail($id);
@@ -516,8 +514,8 @@ class ExamSessionController extends Controller
         // Get kelompok tes names
         $kelompokTes = $session->sessionGroups->pluck('nama_kelompok')->implode(', ');
 
-        // Students list
-        $students = $session->students->map(fn($ss) => $ss->student)->filter()->sortBy('nama')->values();
+        // Students list (belongsToMany returns Student models directly)
+        $students = $session->students()->orderBy('nama')->get();
 
         return view('admin.exam-sessions.print-attendance', compact('session', 'subjects', 'kelompokTes', 'students'));
     }
