@@ -577,11 +577,12 @@
 
         // ===== ANTI-CHEAT SECURITY =====
         let examLocked = false;
-        const initialWidth = window.innerWidth;
-        const initialHeight = window.innerHeight;
+        let fsTransition = false; // Guard: true during fullscreen transition
+        let baseWidth = window.innerWidth;
+        let baseHeight = window.innerHeight;
 
         function lockExam() {
-            if (examLocked) return;
+            if (examLocked || fsTransition) return;
             examLocked = true;
 
             // Show lock overlay
@@ -598,30 +599,47 @@
             });
         }
 
+        // Mark fullscreen transitions to suppress false blur/resize events
+        function startFsTransition() {
+            fsTransition = true;
+            setTimeout(function() {
+                fsTransition = false;
+                // Update baseline dimensions after fullscreen change
+                baseWidth = window.innerWidth;
+                baseHeight = window.innerHeight;
+            }, 1500);
+        }
+
         // 1. Tab switch / minimize detection (works on both desktop & mobile)
         document.addEventListener('visibilitychange', function() {
-            if (document.hidden) {
+            if (document.hidden && !fsTransition) {
                 lockExam();
             }
         });
 
         // 2. Window blur — detects losing focus (desktop: clicking outside browser, alt-tab)
         window.addEventListener('blur', function() {
-            lockExam();
+            // Delay to avoid false trigger during fullscreen transition
+            setTimeout(function() {
+                if (!fsTransition && !document.hasFocus()) {
+                    lockExam();
+                }
+            }, 500);
         });
 
         // 3. Split-screen / multi-window detection — screen resize beyond threshold
         let resizeTimer = null;
         window.addEventListener('resize', function() {
+            if (fsTransition) return;
             clearTimeout(resizeTimer);
             resizeTimer = setTimeout(function() {
-                const widthDiff = Math.abs(window.innerWidth - initialWidth);
-                const heightDiff = Math.abs(window.innerHeight - initialHeight);
-                // Significant resize = likely split-screen (more than 15% change)
-                if (widthDiff > initialWidth * 0.15 || heightDiff > initialHeight * 0.15) {
+                if (fsTransition) return;
+                const widthDiff = Math.abs(window.innerWidth - baseWidth);
+                const heightDiff = Math.abs(window.innerHeight - baseHeight);
+                if (widthDiff > baseWidth * 0.15 || heightDiff > baseHeight * 0.15) {
                     lockExam();
                 }
-            }, 300);
+            }, 500);
         });
 
         // 4. Detect Picture-in-Picture or page hide
@@ -653,6 +671,7 @@
         const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
 
         function requestFullscreen() {
+            startFsTransition(); // Suppress false blur/resize events
             const el = document.documentElement;
             const rfs = el.requestFullscreen || el.webkitRequestFullscreen || el.webkitEnterFullscreen || el.mozRequestFullScreen || el.msRequestFullscreen;
             if (rfs) {
@@ -677,17 +696,21 @@
             document.removeEventListener('click', enterFS);
         }, { once: true });
 
-        // Detect exit from fullscreen = lock
-        document.addEventListener('fullscreenchange', function() {
-            if (!document.fullscreenElement && !document.webkitFullscreenElement) {
-                lockExam();
+        // Detect fullscreen changes
+        function onFullscreenChange() {
+            if (document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement) {
+                // Entering fullscreen — suppress events
+                startFsTransition();
+            } else {
+                // Exiting fullscreen — lock if not during transition
+                if (!fsTransition) {
+                    lockExam();
+                }
             }
-        });
-        document.addEventListener('webkitfullscreenchange', function() {
-            if (!document.webkitFullscreenElement) {
-                lockExam();
-            }
-        });
+        }
+        document.addEventListener('fullscreenchange', onFullscreenChange);
+        document.addEventListener('webkitfullscreenchange', onFullscreenChange);
+        document.addEventListener('mozfullscreenchange', onFullscreenChange);
 
         if (isMobile) {
             // Mobile: detect touch on status/notification bar area
