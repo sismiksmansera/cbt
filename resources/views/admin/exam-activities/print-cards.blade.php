@@ -94,12 +94,13 @@
         }
 
 
-        /* Body */
+        /* Body: photo | info | QR in one row */
         .card-body {
             flex: 1;
             display: flex;
             padding: 3mm;
             gap: 3mm;
+            align-items: center;
         }
 
         /* Photo */
@@ -121,16 +122,12 @@
             line-height: 1.4;
         }
 
-        /* Right: Info + QR */
-        .card-right {
+        /* Info */
+        .card-info {
             flex: 1;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
-        }
-        .card-info {
-            display: flex;
-            flex-direction: column;
+            justify-content: center;
             gap: 1mm;
         }
         .info-row {
@@ -166,16 +163,11 @@
             color: #334155;
         }
 
-        /* QR bottom-right */
-        .card-qr-row {
-            display: flex;
-            justify-content: flex-end;
-            align-items: flex-end;
-            margin-top: 1mm;
-        }
+        /* QR */
         .card-qr {
-            width: 16mm;
-            height: 16mm;
+            width: 20mm;
+            height: 20mm;
+            flex-shrink: 0;
         }
         .card-qr img {
             width: 100%;
@@ -225,26 +217,22 @@
                 <div class="card-photo">
                     <span>Pas Foto<br>2 × 2.7 cm</span>
                 </div>
-                <div class="card-right">
-                    <div class="card-info">
-                        <div class="info-row">
-                            <span class="lbl">Kelompok Tes / No. Urut</span>
-                            <span class="val kelompok">{{ $card['kelompok'] }} — {{ $card['nomor'] }}</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="lbl">Nama Peserta</span>
-                            <span class="val nama">{{ $card['nama'] }}</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="lbl">NISN</span>
-                            <span class="val nisn">{{ $card['nisn'] }}</span>
-                        </div>
+                <div class="card-info">
+                    <div class="info-row">
+                        <span class="lbl">Kelompok Tes / No. Urut</span>
+                        <span class="val kelompok">{{ $card['kelompok'] }} — {{ $card['nomor'] }}</span>
                     </div>
-                    <div class="card-qr-row">
-                        <div class="card-qr">
-                            <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data={{ urlencode('https://cbt.smansera.app/login?nisn=' . $card['nisn']) }}" alt="QR">
-                        </div>
+                    <div class="info-row">
+                        <span class="lbl">Nama Peserta</span>
+                        <span class="val nama">{{ $card['nama'] }}</span>
                     </div>
+                    <div class="info-row">
+                        <span class="lbl">NISN</span>
+                        <span class="val nisn">{{ $card['nisn'] }}</span>
+                    </div>
+                </div>
+                <div class="card-qr">
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data={{ urlencode('https://cbt.smansera.app/login?nisn=' . $card['nisn']) }}" alt="QR">
                 </div>
             </div>
             <div class="card-footer">
