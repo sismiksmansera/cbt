@@ -103,12 +103,19 @@
             margin-top: 0.3mm;
         }
 
-        /* Body = photo (left) + info (center) + QR (right) */
+        /* Body = left column (photo+QR) + right column (info) */
         .card-body {
             flex: 1;
             display: flex;
-            align-items: center;
             gap: 3mm;
+        }
+
+        .card-left {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5mm;
+            flex-shrink: 0;
+            width: 20mm;
         }
 
         /* Photo placeholder */
@@ -117,7 +124,6 @@
             height: 27mm;
             border: 1px solid #cbd5e1;
             border-radius: 3px;
-            flex-shrink: 0;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -128,6 +134,15 @@
             color: #94a3b8;
             text-align: center;
             line-height: 1.3;
+        }
+
+        .card-qr {
+            width: 20mm;
+            height: 20mm;
+        }
+        .card-qr img {
+            width: 100%;
+            height: 100%;
         }
 
         .card-info {
@@ -169,16 +184,6 @@
             border-radius: 2px;
         }
 
-        .card-qr {
-            width: 20mm;
-            height: 20mm;
-            flex-shrink: 0;
-        }
-        .card-qr img {
-            width: 100%;
-            height: 100%;
-        }
-
         /* Footer */
         .card-footer {
             border-top: 1px solid #e2e8f0;
@@ -218,8 +223,13 @@
                 <img src="{{ asset('images/logo-sekolah.png') }}" alt="Sekolah">
             </div>
             <div class="card-body">
-                <div class="card-photo">
-                    <div class="photo-label">Foto<br>2×2.7</div>
+                <div class="card-left">
+                    <div class="card-photo">
+                        <div class="photo-label">Foto<br>2×2.7</div>
+                    </div>
+                    <div class="card-qr">
+                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data={{ urlencode('https://cbt.smansera.app/login?nisn=' . $card['nisn']) }}" alt="QR">
+                    </div>
                 </div>
                 <div class="card-info">
                     <div class="label">Kelompok Tes</div>
@@ -228,9 +238,6 @@
                     <div class="nama-siswa">{{ $card['nama'] }}</div>
                     <div class="label">NISN</div>
                     <div class="nisn">{{ $card['nisn'] }}</div>
-                </div>
-                <div class="card-qr">
-                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data={{ urlencode('https://cbt.smansera.app/login?nisn=' . $card['nisn']) }}" alt="QR">
                 </div>
             </div>
             <div class="card-footer">
