@@ -282,4 +282,83 @@ class ExamActivityController extends Controller
         return redirect()->route('admin.exam-activities.index')
             ->with('success', 'Kegiatan ujian berhasil dihapus.');
     }
+
+    public function downloadPeserta($id)
+    {
+        $activity = ExamActivity::with(['groups.students'])->findOrFail($id);
+
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $spreadsheet->removeSheetByIndex(0);
+
+        foreach ($activity->groups as $gIdx => $group) {
+            $sheet = new \PhpOffice\PhpSpreadsheet\Worksheet\Worksheet($spreadsheet, mb_substr($group->nama_kelompok, 0, 31));
+            $spreadsheet->addSheet($sheet, $gIdx);
+
+            // Title
+            $sheet->setCellValue('A1', $activity->nama_kegiatan);
+            $sheet->mergeCells('A1:E1');
+            $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
+
+            $sheet->setCellValue('A2', 'Kelompok Tes: ' . $group->nama_kelompok);
+            $sheet->mergeCells('A2:E2');
+            $sheet->getStyle('A2')->getFont()->setBold(true)->setSize(11);
+
+            // Header
+            $row = 4;
+            $headers = ['No', 'NISN', 'Nama Siswa', 'Kelas', 'Jenis Kelamin'];
+            foreach ($headers as $col => $header) {
+                $cell = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($col + 1) . $row;
+                $sheet->setCellValue($cell, $header);
+            }
+            $headerRange = 'A' . $row . ':E' . $row;
+            $sheet->getStyle($headerRange)->getFont()->setBold(true);
+            $sheet->getStyle($headerRange)->getFill()
+                ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+                ->getStartColor()->setRGB('E2E8F0');
+            $sheet->getStyle($headerRange)->getBorders()->getAllBorders()
+                ->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
+
+            // Data
+            $students = $group->students->sortBy('nama')->values();
+            foreach ($students as $i => $student) {
+                $row++;
+                $sheet->setCellValue('A' . $row, $i + 1);
+                $sheet->setCellValueExplicit('B' . $row, $student->nisn, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                $sheet->setCellValue('C' . $row, $student->nama);
+                $sheet->setCellValue('D' . $row, $student->kelas);
+                $sheet->setCellValue('E' . $row, $student->jenis_kelamin ?? '-');
+
+                $dataRange = 'A' . $row . ':E' . $row;
+                $sheet->getStyle($dataRange)->getBorders()->getAllBorders()
+                    ->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
+            }
+
+            // Total
+            $row++;
+            $sheet->setCellValue('A' . $row, 'Total: ' . $students->count() . ' siswa');
+            $sheet->mergeCells('A' . $row . ':E' . $row);
+            $sheet->getStyle('A' . $row)->getFont()->setBold(true);
+
+            // Column widths
+            $sheet->getColumnDimension('A')->setWidth(5);
+            $sheet->getColumnDimension('B')->setWidth(18);
+            $sheet->getColumnDimension('C')->setWidth(35);
+            $sheet->getColumnDimension('D')->setWidth(15);
+            $sheet->getColumnDimension('E')->setWidth(15);
+
+            // Center No column
+            $sheet->getStyle('A4:A' . ($row - 1))->getAlignment()
+                ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        }
+
+        $filename = 'Peserta_' . str_replace(' ', '_', $activity->nama_kegiatan) . '.xlsx';
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+
+        $tempFile = tempnam(sys_get_temp_dir(), 'peserta_');
+        $writer->save($tempFile);
+
+        return response()->download($tempFile, $filename, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ])->deleteFileAfterSend(true);
+    }
 }

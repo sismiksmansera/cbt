@@ -36,6 +36,7 @@
                             <a href="{{ route('admin.exam-activities.edit', $a->id) }}" class="btn btn-sm" style="background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;" title="Edit"><i class="fas fa-pencil-alt"></i></a>
                             <a href="{{ route('admin.exam-sessions.index', ['activity_id' => $a->id]) }}" class="btn btn-primary btn-sm" title="Setting Ujian"><i class="fas fa-cog"></i></a>
                             <a href="{{ route('admin.exam-activities.print-cards', $a->id) }}" class="btn btn-sm" style="background:#7c3aed;color:#fff;" title="Cetak Kartu Peserta" target="_blank"><i class="fas fa-id-card"></i></a>
+                            <a href="{{ route('admin.exam-activities.download-peserta', $a->id) }}" class="btn btn-sm" style="background:linear-gradient(135deg,#10b981,#059669);color:#fff;" title="Download Daftar Peserta (Excel)"><i class="fas fa-file-excel"></i></a>
                             <form action="{{ route('admin.exam-activities.destroy', $a->id) }}" method="POST" onsubmit="return confirm('Hapus kegiatan ini?')">@csrf @method('DELETE')
                                 <button class="btn btn-danger btn-icon btn-sm"><i class="fas fa-trash"></i></button>
                             </form>

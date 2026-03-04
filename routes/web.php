@@ -107,6 +107,7 @@ Route::prefix('admin')->name('admin.')->middleware('check.admin')->group(functio
     Route::put('/exam-activities/{id}', [ExamActivityController::class, 'update'])->name('exam-activities.update');
     Route::delete('/exam-activities/{id}', [ExamActivityController::class, 'destroy'])->name('exam-activities.destroy');
     Route::get('/exam-activities/{id}/print-cards', [ExamActivityController::class, 'printCards'])->name('exam-activities.print-cards');
+    Route::get('/exam-activities/{id}/download-peserta', [ExamActivityController::class, 'downloadPeserta'])->name('exam-activities.download-peserta');
 
     // Results
     Route::get('/results', [ResultController::class, 'index'])->name('results.index');
