@@ -30,7 +30,7 @@
             padding: 12px 28px; background: rgba(255,255,255,0.2); color: white;
             border: 2px solid rgba(255,255,255,0.4); border-radius: 10px;
             font-size: 15px; font-weight: 600; cursor: pointer; margin-top: 14px;
-            font-family: inherit; backdrop-filter: blur(5px);
+            font-family: inherit;
         }
         .btn-print:hover { background: rgba(255,255,255,0.3); }
 
@@ -39,7 +39,7 @@
             body { background: white; }
         }
 
-        /* Page grid: 2 columns x 4 rows = 8 cards per A4 */
+        /* Page: 2 columns x 4 rows = 8 cards */
         .page {
             width: 194mm;
             height: 277mm;
@@ -53,89 +53,79 @@
         }
         .page:last-child { page-break-after: auto; }
 
+        /* === CARD === */
         .card {
-            border: 1px solid #cbd5e1;
-            border-radius: 4px;
-            padding: 3.5mm;
+            border: 1.5px solid #1e293b;
+            border-radius: 5px;
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            position: relative;
         }
 
-        /* Accent bar top */
-        .card::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0;
-            height: 2.5px;
-            background: linear-gradient(90deg, #7c3aed, #3b82f6);
-        }
-
-        /* KOP */
-        .card-kop {
+        /* Header band */
+        .card-header {
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            color: white;
             display: flex;
             align-items: center;
+            padding: 2mm 3mm;
             gap: 2mm;
-            padding-bottom: 2mm;
-            margin-bottom: 2mm;
-            border-bottom: 1px solid #e2e8f0;
         }
-        .card-kop img {
-            width: 8mm;
-            height: 8mm;
+        .card-header img {
+            width: 7mm;
+            height: 7mm;
             object-fit: contain;
+            border-radius: 1px;
         }
-        .card-kop .kop-text {
-            text-align: center;
+        .card-header .header-text {
             flex: 1;
+            text-align: center;
         }
-        .card-kop .kop-title {
+        .card-header .header-title {
+            font-size: 8pt;
             font-weight: 700;
-            font-size: 9pt;
             text-transform: uppercase;
-            letter-spacing: 0.8px;
-            color: #1e293b;
+            letter-spacing: 1.5px;
         }
-        .card-kop .kop-kegiatan {
-            font-size: 7pt;
-            color: #64748b;
+        .card-header .header-sub {
+            font-size: 6pt;
+            opacity: 0.85;
             margin-top: 0.3mm;
         }
 
-        /* Body = left column (photo+QR) + right column (info) */
+        /* Body */
         .card-body {
             flex: 1;
             display: flex;
+            padding: 3mm;
             gap: 3mm;
         }
 
+        /* Left: Photo + QR stacked */
         .card-left {
             display: flex;
             flex-direction: column;
+            align-items: center;
             gap: 1.5mm;
-            flex-shrink: 0;
             width: 20mm;
+            flex-shrink: 0;
         }
-
-        /* Photo placeholder */
         .card-photo {
             width: 20mm;
             height: 27mm;
-            border: 1px solid #cbd5e1;
-            border-radius: 3px;
+            border: 1px solid #94a3b8;
+            border-radius: 2px;
             display: flex;
             align-items: center;
             justify-content: center;
             background: #f8fafc;
         }
-        .card-photo .photo-label {
-            font-size: 5.5pt;
+        .card-photo span {
+            font-size: 5pt;
             color: #94a3b8;
             text-align: center;
-            line-height: 1.3;
+            line-height: 1.4;
         }
-
         .card-qr {
             width: 20mm;
             height: 20mm;
@@ -143,56 +133,62 @@
         .card-qr img {
             width: 100%;
             height: 100%;
+            display: block;
         }
 
+        /* Right: Student info */
         .card-info {
             flex: 1;
             display: flex;
             flex-direction: column;
             justify-content: center;
+            gap: 1mm;
         }
-        .card-info .label {
+        .info-row {
+            display: flex;
+            flex-direction: column;
+        }
+        .info-row .lbl {
             font-size: 5.5pt;
-            color: #94a3b8;
+            color: #64748b;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.6px;
             font-weight: 600;
-            margin-bottom: 0.3mm;
         }
-        .card-info .kelompok-nomor {
-            font-size: 8.5pt;
-            font-weight: 700;
-            color: #7c3aed;
-            margin-bottom: 2mm;
-        }
-        .card-info .nama-siswa {
-            font-size: 10pt;
+        .info-row .val {
+            font-size: 9pt;
             font-weight: 700;
             color: #0f172a;
-            text-transform: uppercase;
-            margin-bottom: 2mm;
-            line-height: 1.2;
+            margin-top: 0.3mm;
         }
-        .card-info .nisn {
+        .info-row .val.kelompok {
+            color: #7c3aed;
             font-size: 9pt;
+        }
+        .info-row .val.nama {
+            font-size: 10.5pt;
+            text-transform: uppercase;
+            line-height: 1.2;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 1.5mm;
+            margin-bottom: 0.5mm;
+        }
+        .info-row .val.nisn {
             font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 9pt;
+            letter-spacing: 1px;
             color: #334155;
-            letter-spacing: 0.8px;
-            background: #f1f5f9;
-            display: inline-block;
-            padding: 0.5mm 2mm;
-            border-radius: 2px;
         }
 
         /* Footer */
         .card-footer {
-            border-top: 1px solid #e2e8f0;
-            padding-top: 1mm;
-            margin-top: 2mm;
-            font-size: 6.5pt;
+            background: #f1f5f9;
             text-align: center;
-            color: #94a3b8;
-            letter-spacing: 0.3px;
+            padding: 1mm;
+            font-size: 6pt;
+            color: #64748b;
+            letter-spacing: 0.5px;
+            border-top: 1px solid #e2e8f0;
         }
     </style>
 </head>
@@ -214,30 +210,36 @@
     <div class="page">
         @foreach($chunk as $card)
         <div class="card">
-            <div class="card-kop">
+            <div class="card-header">
                 <img src="{{ asset('images/logo-lampung.png') }}" alt="Lampung">
-                <div class="kop-text">
-                    <div class="kop-title">Kartu Ujian</div>
-                    <div class="kop-kegiatan">{{ $activity->nama_kegiatan }}</div>
+                <div class="header-text">
+                    <div class="header-title">Kartu Ujian</div>
+                    <div class="header-sub">{{ $activity->nama_kegiatan }}</div>
                 </div>
                 <img src="{{ asset('images/logo-sekolah.png') }}" alt="Sekolah">
             </div>
             <div class="card-body">
                 <div class="card-left">
                     <div class="card-photo">
-                        <div class="photo-label">Foto<br>2×2.7</div>
+                        <span>Pas Foto<br>2 × 2.7 cm</span>
                     </div>
                     <div class="card-qr">
                         <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data={{ urlencode('https://cbt.smansera.app/login?nisn=' . $card['nisn']) }}" alt="QR">
                     </div>
                 </div>
                 <div class="card-info">
-                    <div class="label">Kelompok Tes</div>
-                    <div class="kelompok-nomor">{{ $card['kelompok'] }} - {{ $card['nomor'] }}</div>
-                    <div class="label">Nama Peserta</div>
-                    <div class="nama-siswa">{{ $card['nama'] }}</div>
-                    <div class="label">NISN</div>
-                    <div class="nisn">{{ $card['nisn'] }}</div>
+                    <div class="info-row">
+                        <span class="lbl">Kelompok Tes / No. Urut</span>
+                        <span class="val kelompok">{{ $card['kelompok'] }} — {{ $card['nomor'] }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="lbl">Nama Peserta</span>
+                        <span class="val nama">{{ $card['nama'] }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="lbl">NISN</span>
+                        <span class="val nisn">{{ $card['nisn'] }}</span>
+                    </div>
                 </div>
             </div>
             <div class="card-footer">
