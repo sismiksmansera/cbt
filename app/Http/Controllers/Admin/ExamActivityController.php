@@ -351,7 +351,8 @@ class ExamActivityController extends Controller
                 ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
         }
 
-        $filename = 'Peserta_' . str_replace(' ', '_', $activity->nama_kegiatan) . '.xlsx';
+        $safeName = preg_replace('/[\/\\\\:*?"<>|]/', '_', $activity->nama_kegiatan);
+        $filename = 'Peserta_' . str_replace(' ', '_', $safeName) . '.xlsx';
         $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
 
         $tempFile = tempnam(sys_get_temp_dir(), 'peserta_');
