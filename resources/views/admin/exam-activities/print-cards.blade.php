@@ -45,7 +45,7 @@
             height: 277mm;
             display: grid;
             grid-template-columns: 1fr 1fr;
-            grid-template-rows: repeat(4, 1fr);
+            grid-template-rows: repeat(5, 1fr);
             gap: 2mm;
             page-break-after: always;
             margin: 0 auto;
@@ -198,7 +198,7 @@
     </div>
 
     @php
-        $chunks = array_chunk($cards, 8);
+        $chunks = array_chunk($cards, 10);
     @endphp
 
     @foreach($chunks as $chunk)
@@ -241,7 +241,7 @@
         </div>
         @endforeach
 
-        @for($i = count($chunk); $i < 8; $i++)
+        @for($i = count($chunk); $i < 10; $i++)
         <div class="card" style="border:none;"></div>
         @endfor
     </div>
