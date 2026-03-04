@@ -93,6 +93,7 @@
             margin-top: 0.3mm;
         }
 
+
         /* Body */
         .card-body {
             flex: 1;
@@ -101,15 +102,7 @@
             gap: 3mm;
         }
 
-        /* Left: Photo + QR stacked */
-        .card-left {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 1.5mm;
-            width: 20mm;
-            flex-shrink: 0;
-        }
+        /* Photo */
         .card-photo {
             width: 20mm;
             height: 27mm;
@@ -119,6 +112,7 @@
             align-items: center;
             justify-content: center;
             background: #f8fafc;
+            flex-shrink: 0;
         }
         .card-photo span {
             font-size: 5pt;
@@ -126,22 +120,17 @@
             text-align: center;
             line-height: 1.4;
         }
-        .card-qr {
-            width: 20mm;
-            height: 20mm;
-        }
-        .card-qr img {
-            width: 100%;
-            height: 100%;
-            display: block;
-        }
 
-        /* Right: Student info */
-        .card-info {
+        /* Right: Info + QR */
+        .card-right {
             flex: 1;
             display: flex;
             flex-direction: column;
-            justify-content: center;
+            justify-content: space-between;
+        }
+        .card-info {
+            display: flex;
+            flex-direction: column;
             gap: 1mm;
         }
         .info-row {
@@ -169,15 +158,29 @@
             font-size: 10.5pt;
             text-transform: uppercase;
             line-height: 1.2;
-            border-bottom: 1px solid #e2e8f0;
-            padding-bottom: 1.5mm;
-            margin-bottom: 0.5mm;
         }
         .info-row .val.nisn {
             font-family: 'Consolas', 'Courier New', monospace;
             font-size: 9pt;
             letter-spacing: 1px;
             color: #334155;
+        }
+
+        /* QR bottom-right */
+        .card-qr-row {
+            display: flex;
+            justify-content: flex-end;
+            align-items: flex-end;
+            margin-top: 1mm;
+        }
+        .card-qr {
+            width: 16mm;
+            height: 16mm;
+        }
+        .card-qr img {
+            width: 100%;
+            height: 100%;
+            display: block;
         }
 
         /* Footer */
@@ -219,26 +222,28 @@
                 <img src="{{ asset('images/logo-sekolah.png') }}" alt="Sekolah">
             </div>
             <div class="card-body">
-                <div class="card-left">
-                    <div class="card-photo">
-                        <span>Pas Foto<br>2 × 2.7 cm</span>
-                    </div>
-                    <div class="card-qr">
-                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data={{ urlencode('https://cbt.smansera.app/login?nisn=' . $card['nisn']) }}" alt="QR">
-                    </div>
+                <div class="card-photo">
+                    <span>Pas Foto<br>2 × 2.7 cm</span>
                 </div>
-                <div class="card-info">
-                    <div class="info-row">
-                        <span class="lbl">Kelompok Tes / No. Urut</span>
-                        <span class="val kelompok">{{ $card['kelompok'] }} — {{ $card['nomor'] }}</span>
+                <div class="card-right">
+                    <div class="card-info">
+                        <div class="info-row">
+                            <span class="lbl">Kelompok Tes / No. Urut</span>
+                            <span class="val kelompok">{{ $card['kelompok'] }} — {{ $card['nomor'] }}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="lbl">Nama Peserta</span>
+                            <span class="val nama">{{ $card['nama'] }}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="lbl">NISN</span>
+                            <span class="val nisn">{{ $card['nisn'] }}</span>
+                        </div>
                     </div>
-                    <div class="info-row">
-                        <span class="lbl">Nama Peserta</span>
-                        <span class="val nama">{{ $card['nama'] }}</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="lbl">NISN</span>
-                        <span class="val nisn">{{ $card['nisn'] }}</span>
+                    <div class="card-qr-row">
+                        <div class="card-qr">
+                            <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data={{ urlencode('https://cbt.smansera.app/login?nisn=' . $card['nisn']) }}" alt="QR">
+                        </div>
                     </div>
                 </div>
             </div>
