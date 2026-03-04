@@ -39,13 +39,13 @@
             body { background: white; }
         }
 
-        /* Page grid: 2 columns x 5 rows = 10 cards per A4 */
+        /* Page grid: 2 columns x 4 rows = 8 cards per A4 */
         .page {
             width: 194mm;
             height: 277mm;
             display: grid;
             grid-template-columns: 1fr 1fr;
-            grid-template-rows: repeat(5, 1fr);
+            grid-template-rows: repeat(4, 1fr);
             gap: 2mm;
             page-break-after: always;
             margin: 0 auto;
@@ -55,8 +55,8 @@
 
         .card {
             border: 1px solid #cbd5e1;
-            border-radius: 3px;
-            padding: 3mm;
+            border-radius: 4px;
+            padding: 3.5mm;
             display: flex;
             flex-direction: column;
             overflow: hidden;
@@ -68,7 +68,7 @@
             content: '';
             position: absolute;
             top: 0; left: 0; right: 0;
-            height: 2px;
+            height: 2.5px;
             background: linear-gradient(90deg, #7c3aed, #3b82f6);
         }
 
@@ -82,8 +82,8 @@
             border-bottom: 1px solid #e2e8f0;
         }
         .card-kop img {
-            width: 7mm;
-            height: 7mm;
+            width: 8mm;
+            height: 8mm;
             object-fit: contain;
         }
         .card-kop .kop-text {
@@ -92,24 +92,44 @@
         }
         .card-kop .kop-title {
             font-weight: 700;
-            font-size: 8.5pt;
+            font-size: 9pt;
             text-transform: uppercase;
             letter-spacing: 0.8px;
             color: #1e293b;
         }
         .card-kop .kop-kegiatan {
-            font-size: 6.5pt;
+            font-size: 7pt;
             color: #64748b;
             margin-top: 0.3mm;
         }
 
-        /* Body = student info (left) + QR (right) */
+        /* Body = photo (left) + info (center) + QR (right) */
         .card-body {
             flex: 1;
             display: flex;
             align-items: center;
-            gap: 2mm;
+            gap: 3mm;
         }
+
+        /* Photo placeholder */
+        .card-photo {
+            width: 20mm;
+            height: 27mm;
+            border: 1px solid #cbd5e1;
+            border-radius: 3px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f8fafc;
+        }
+        .card-photo .photo-label {
+            font-size: 5.5pt;
+            color: #94a3b8;
+            text-align: center;
+            line-height: 1.3;
+        }
+
         .card-info {
             flex: 1;
             display: flex;
@@ -125,21 +145,21 @@
             margin-bottom: 0.3mm;
         }
         .card-info .kelompok-nomor {
-            font-size: 8pt;
+            font-size: 8.5pt;
             font-weight: 700;
             color: #7c3aed;
-            margin-bottom: 1.5mm;
+            margin-bottom: 2mm;
         }
         .card-info .nama-siswa {
-            font-size: 9.5pt;
+            font-size: 10pt;
             font-weight: 700;
             color: #0f172a;
             text-transform: uppercase;
-            margin-bottom: 1.5mm;
+            margin-bottom: 2mm;
             line-height: 1.2;
         }
         .card-info .nisn {
-            font-size: 8.5pt;
+            font-size: 9pt;
             font-family: 'Consolas', 'Courier New', monospace;
             color: #334155;
             letter-spacing: 0.8px;
@@ -150,8 +170,8 @@
         }
 
         .card-qr {
-            width: 18mm;
-            height: 18mm;
+            width: 20mm;
+            height: 20mm;
             flex-shrink: 0;
         }
         .card-qr img {
@@ -163,8 +183,8 @@
         .card-footer {
             border-top: 1px solid #e2e8f0;
             padding-top: 1mm;
-            margin-top: 1.5mm;
-            font-size: 6pt;
+            margin-top: 2mm;
+            font-size: 6.5pt;
             text-align: center;
             color: #94a3b8;
             letter-spacing: 0.3px;
@@ -182,7 +202,7 @@
     </div>
 
     @php
-        $chunks = array_chunk($cards, 10);
+        $chunks = array_chunk($cards, 8);
     @endphp
 
     @foreach($chunks as $chunk)
@@ -198,6 +218,9 @@
                 <img src="{{ asset('images/logo-sekolah.png') }}" alt="Sekolah">
             </div>
             <div class="card-body">
+                <div class="card-photo">
+                    <div class="photo-label">Foto<br>2×2.7</div>
+                </div>
                 <div class="card-info">
                     <div class="label">Kelompok Tes</div>
                     <div class="kelompok-nomor">{{ $card['kelompok'] }} - {{ $card['nomor'] }}</div>
@@ -216,7 +239,7 @@
         </div>
         @endforeach
 
-        @for($i = count($chunk); $i < 10; $i++)
+        @for($i = count($chunk); $i < 8; $i++)
         <div class="card" style="border:none;"></div>
         @endfor
     </div>
