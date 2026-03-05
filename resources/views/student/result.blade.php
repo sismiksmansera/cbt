@@ -71,20 +71,16 @@
 </head>
 <body>
     <div class="result-card">
-        @if($result)
-            <div class="result-icon {{ $result->lulus ? 'pass' : 'fail' }}">
-                <i class="fas {{ $result->lulus ? 'fa-trophy' : 'fa-times-circle' }}"></i>
+        @if(($showResult ?? true) && $result)
+            <div class="result-icon" style="color:#10b981;">
+                <i class="fas fa-check-circle"></i>
             </div>
-            <h2>{{ $result->lulus ? 'Selamat! Kamu Lulus!' : 'Belum Lulus' }}</h2>
+            <h2>Ujian Telah Selesai</h2>
             <p class="exam-name">{{ $session->nama_sesi }}</p>
 
-            <div class="score-circle {{ $result->lulus ? 'pass' : 'fail' }}">
+            <div class="score-circle pass">
                 <div class="score-value">{{ number_format($result->skor, 0) }}</div>
                 <div class="score-label">SKOR</div>
-            </div>
-
-            <div class="status-badge {{ $result->lulus ? 'pass' : 'fail' }}">
-                {{ $result->lulus ? '✓ LULUS' : '✗ TIDAK LULUS' }}
             </div>
 
             <div class="stats-grid">
@@ -102,9 +98,9 @@
                 </div>
             </div>
         @else
-            <div class="result-icon" style="color:#f59e0b;"><i class="fas fa-check-circle"></i></div>
-            <h2>Ujian Selesai</h2>
-            <p class="exam-name">Jawaban kamu telah dikumpulkan.</p>
+            <div class="result-icon" style="color:#10b981;"><i class="fas fa-check-circle"></i></div>
+            <h2>Ujian Telah Selesai</h2>
+            <p class="exam-name" style="margin-bottom:32px;">Terimakasih. Jawaban kamu telah berhasil dikumpulkan.</p>
         @endif
 
         <form action="{{ route('student.logout') }}" method="POST">

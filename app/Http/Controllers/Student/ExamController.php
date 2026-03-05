@@ -140,7 +140,8 @@ class ExamController extends Controller
         if ($pivot->status === 'selesai') {
             $result = ExamResult::where('exam_session_id', $sessionId)
                         ->where('student_id', $studentId)->first();
-            return view('student.result', compact('session', 'result'));
+            $showResult = $session->categories->contains(fn($cat) => $cat->exam && $cat->exam->show_result);
+            return view('student.result', compact('session', 'result', 'showResult'));
         }
 
         // Match question group based on student's rombel (same logic as getSessionQuestions)
@@ -219,7 +220,8 @@ class ExamController extends Controller
         if ($pivot->status === 'selesai') {
             $result = ExamResult::where('exam_session_id', $sessionId)
                         ->where('student_id', $studentId)->first();
-            return view('student.result', compact('session', 'result'));
+            $showResult = $session->categories->contains(fn($cat) => $cat->exam && $cat->exam->show_result);
+            return view('student.result', compact('session', 'result', 'showResult'));
         }
 
         $questions = $this->getSessionQuestions($sessionId, $studentId);
@@ -403,13 +405,35 @@ class ExamController extends Controller
             return response()->json(['success' => false]);
         }
 
-        ExamSessionStudent::where('exam_session_id', $sessionId)
-            ->where('student_id', $studentId)
-            ->update(['is_locked' => true]);
+        // Don't lock students who have already finished
+        $pivot = ExamSessionStudent::where('exam_session_id', $sessionId)
+            ->where('student_id', $studentId)->first();
 
-        // Logout the student
-        session()->forget(['student_id', 'student_name', 'student_nisn', 'exam_session_id']);
+        if ($pivot && $pivot->status === 'selesai') {
+            session()->forget(['student_id', 'student_name', 'student_nisn', 'exam_session_id']);
+            return response()->json(['success' => true, 'locked' => false]);
+        }
 
-        return response()->json(['success' => true, 'locked' => true]);
+        // Increment login count
+        if ($pivot) {
+            $pivot->increment('login_count');
+            $pivot->refresh();
+
+            // Check max login attempts
+            $session = ExamSession::find($sessionId);
+            $maxAttempts = $session->max_login_attempts ?? 1;
+
+            if ($pivot->login_count >= $maxAttempts) {
+                // Lock the student
+                $pivot->update(['is_locked' => true]);
+                session()->forget(['student_id', 'student_name', 'student_nisn', 'exam_session_id']);
+                return response()->json(['success' => true, 'locked' => true]);
+            }
+        }
+
+        // Under limit: logout but don't lock
+        session()->forget(['student_id', 'student_name', 'student_nisn', 'exam_session_id', 'exam_confirmed']);
+
+        return response()->json(['success' => true, 'locked' => false]);
     }
 }

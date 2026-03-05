@@ -110,8 +110,36 @@ class StudentController extends Controller
             }
         }
 
+        // Auto-sync students to exam activity groups based on rombel
+        $groupsSynced = $this->autoSyncExamGroups();
+
         return redirect()->route('admin.students.index')
-            ->with('success', "Sinkronisasi berhasil! $synced siswa baru ditambahkan, $updated siswa diperbarui.");
+            ->with('success', "Sinkronisasi berhasil! $synced siswa baru ditambahkan, $updated siswa diperbarui. $groupsSynced kelompok ujian di-update.");
+    }
+
+    /**
+     * Auto-sync students to rombel-based exam activity groups.
+     * For each group whose nama_kelompok matches a student kelas,
+     * re-sync the student list so new/moved students are included.
+     */
+    private function autoSyncExamGroups()
+    {
+        $groups = \App\Models\ExamActivityGroup::all();
+        $kelasList = Student::where('is_active', true)->pluck('kelas')->unique()->toArray();
+        $synced = 0;
+
+        foreach ($groups as $group) {
+            // Only auto-sync if group name matches a known kelas (rombel-based group)
+            if (in_array($group->nama_kelompok, $kelasList)) {
+                $studentIds = Student::where('is_active', true)
+                    ->where('kelas', $group->nama_kelompok)
+                    ->pluck('id');
+                $group->students()->sync($studentIds);
+                $synced++;
+            }
+        }
+
+        return $synced;
     }
     public function index(Request $request)
     {

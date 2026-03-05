@@ -9,7 +9,7 @@
     </div>
     @if($result)
     <div style="text-align:right;">
-        <div style="font-size:36px;font-weight:800;color:{{ $result->lulus ? 'var(--success)' : 'var(--danger)' }};">{{ number_format($result->skor, 1) }}</div>
+        <div style="font-size:36px;font-weight:800;color:{{ $result->lulus ? 'var(--success)' : 'var(--danger)' }};">{{ number_format($result->skor, 1) }}%</div>
         <span class="badge {{ $result->lulus ? 'badge-success' : 'badge-danger' }}">{{ $result->lulus ? 'LULUS' : 'TIDAK LULUS' }}</span>
     </div>
     @endif
@@ -27,14 +27,14 @@
             @if($answer)
                 @if($answer->is_correct)<span class="badge badge-success"><i class="fas fa-check"></i> Benar</span>
                 @else<span class="badge badge-danger"><i class="fas fa-times"></i> Salah</span>@endif
-                <span class="badge badge-purple">{{ $answer->skor ?? 0 }}/{{ $q->bobot }}</span>
+                <span class="badge badge-purple">{{ $answer->skor ?? 0 }}/{{ $q->bobot }} ({{ $q->bobot > 0 ? round((($answer->skor ?? 0) / $q->bobot) * 100) : 0 }}%)</span>
             @else
                 <span class="badge badge-warning">Tidak dijawab</span>
             @endif
         </div>
     </div>
     <div class="card-body-padded">
-        <div style="margin-bottom:12px;">{!! nl2br(e($q->pertanyaan)) !!}</div>
+        <div style="margin-bottom:12px;">{!! nl2br($q->pertanyaan) !!}</div>
 
         @if(in_array($q->tipe, ['multiple_choice', 'multiple_answer', 'true_false']))
             @foreach($q->options as $opt)
@@ -55,7 +55,7 @@
                 @if($opt->is_correct)<i class="fas fa-check-circle" style="color:var(--success);"></i>
                 @elseif($isSelected)<i class="fas fa-times-circle" style="color:var(--danger);"></i>
                 @else<i class="far fa-circle" style="color:var(--text-secondary);"></i>@endif
-                <span>{{ $opt->teks_opsi }} @if($isSelected)<strong>(dipilih)</strong>@endif</span>
+                <span>{!! $opt->teks_opsi !!} @if($isSelected)<strong>(dipilih)</strong>@endif</span>
             </div>
             @endforeach
         @elseif($q->tipe === 'short_answer' || $q->tipe === 'essay')

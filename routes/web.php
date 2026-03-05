@@ -92,8 +92,12 @@ Route::prefix('admin')->name('admin.')->middleware('check.admin')->group(functio
     Route::put('/exam-sessions/{id}', [ExamSessionController::class, 'update'])->name('exam-sessions.update');
     Route::post('/exam-sessions/{id}/restart', [ExamSessionController::class, 'restart'])->name('exam-sessions.restart');
     Route::post('/exam-sessions/{id}/unlock-student/{studentId}', [ExamSessionController::class, 'unlockStudent'])->name('exam-sessions.unlock-student');
+    Route::post('/exam-sessions/{id}/unlock-all', [ExamSessionController::class, 'unlockAll'])->name('exam-sessions.unlock-all');
+    Route::get('/exam-sessions/{id}/export-results', [ExamSessionController::class, 'exportResults'])->name('exam-sessions.export-results');
+    Route::post('/exam-sessions/{id}/update-max-attempts', [ExamSessionController::class, 'updateMaxAttempts'])->name('exam-sessions.update-max-attempts');
     Route::post('/exam-sessions/{id}/lock-student/{studentId}', [ExamSessionController::class, 'lockStudent'])->name('exam-sessions.lock-student');
     Route::post('/exam-sessions/{id}/force-submit/{studentId}', [ExamSessionController::class, 'forceSubmit'])->name('exam-sessions.force-submit');
+    Route::post('/exam-sessions/{id}/reset-students', [ExamSessionController::class, 'resetStudents'])->name('exam-sessions.reset-students');
     Route::post('/exam-sessions/{id}/add-student', [ExamSessionController::class, 'addStudent'])->name('exam-sessions.add-student');
     Route::delete('/exam-sessions/{id}/remove-student/{studentId}', [ExamSessionController::class, 'removeStudent'])->name('exam-sessions.remove-student');
     Route::post('/exam-sessions/{id}/sync-groups', [ExamSessionController::class, 'syncGroups'])->name('exam-sessions.sync-groups');

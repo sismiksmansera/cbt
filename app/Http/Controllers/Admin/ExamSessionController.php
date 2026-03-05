@@ -132,11 +132,43 @@ class ExamSessionController extends Controller
 
     public function monitor($id)
     {
-        $session = ExamSession::with(['categories.exam', 'students'])->findOrFail($id);
+        $session = ExamSession::with(['categories.exam', 'students', 'sessionGroups.students', 'questionGroups.rombels'])->findOrFail($id);
         $sessionStudents = ExamSessionStudent::where('exam_session_id', $id)
                           ->with('student')
                           ->get();
-        return view('admin.exam-sessions.monitor', compact('session', 'sessionStudents'));
+
+        // Build student_id -> group_name mapping
+        $studentGroupMap = [];
+        $groups = $session->sessionGroups;
+        foreach ($groups as $group) {
+            foreach ($group->students as $student) {
+                $studentGroupMap[$student->id] = $group->nama_kelompok;
+            }
+        }
+
+        // Build student_id -> mapel mapping via question groups & rombels
+        // Build rombel_name -> question group name map first
+        $rombelToMapel = [];
+        foreach ($session->questionGroups as $qg) {
+            foreach ($qg->rombels as $rombel) {
+                $rombelToMapel[$rombel->rombel_name] = $qg->nama_kelompok_soal;
+            }
+        }
+
+        $studentMapelMap = [];
+        foreach ($sessionStudents as $ss) {
+            // Try matching by group name (works for rombel-mode groups)
+            $groupName = $studentGroupMap[$ss->student_id] ?? '';
+            if ($groupName && isset($rombelToMapel[$groupName])) {
+                $studentMapelMap[$ss->student_id] = $rombelToMapel[$groupName];
+            }
+            // Fallback: match by student kelas (works for custom groups)
+            elseif ($ss->student && isset($rombelToMapel[$ss->student->kelas])) {
+                $studentMapelMap[$ss->student_id] = $rombelToMapel[$ss->student->kelas];
+            }
+        }
+
+        return view('admin.exam-sessions.monitor', compact('session', 'sessionStudents', 'groups', 'studentGroupMap', 'studentMapelMap'));
     }
 
     public function toggleStatus($id)
@@ -300,6 +332,51 @@ class ExamSessionController extends Controller
             ->with('success', 'Sesi ujian "' . $session->nama_sesi . '" berhasil dimulai kembali. Semua data siswa telah direset.');
     }
 
+    public function resetStudents(Request $request, $id)
+    {
+        $session = ExamSession::findOrFail($id);
+        $studentIds = $request->input('student_ids', []);
+        $resetAll = $request->input('reset_all', false);
+
+        $query = ExamSessionStudent::where('exam_session_id', $id);
+        if (!$resetAll && !empty($studentIds)) {
+            $query->whereIn('student_id', $studentIds);
+        }
+
+        $affectedIds = $query->pluck('student_id')->toArray();
+
+        if (empty($affectedIds)) {
+            return back()->with('success', 'Tidak ada siswa yang dipilih untuk direset.');
+        }
+
+        // Reset student statuses
+        ExamSessionStudent::where('exam_session_id', $id)
+            ->whereIn('student_id', $affectedIds)
+            ->update([
+                'status' => 'belum_mulai',
+                'waktu_mulai' => null,
+                'waktu_selesai' => null,
+                'login_count' => 0,
+                'is_locked' => false,
+            ]);
+
+        // Delete results
+        \App\Models\ExamResult::where('exam_session_id', $id)
+            ->whereIn('student_id', $affectedIds)->delete();
+
+        // Delete answers
+        \App\Models\StudentAnswer::where('exam_session_id', $id)
+            ->whereIn('student_id', $affectedIds)->delete();
+
+        // Delete attendance confirmations
+        \App\Models\AttendanceConfirmation::where('exam_session_id', $id)
+            ->whereIn('student_id', $affectedIds)->delete();
+
+        $count = count($affectedIds);
+        $msg = $resetAll ? "Seluruh $count siswa berhasil direset." : "$count siswa terpilih berhasil direset.";
+        return back()->with('success', $msg);
+    }
+
     public function unlockStudent($id, $studentId)
     {
         ExamSessionStudent::where('exam_session_id', $id)
@@ -307,6 +384,90 @@ class ExamSessionController extends Controller
             ->update(['is_locked' => false]);
 
         return back()->with('success', 'Siswa berhasil dibuka kuncinya.');
+    }
+
+    public function unlockAll($id)
+    {
+        $count = ExamSessionStudent::where('exam_session_id', $id)
+            ->where('is_locked', true)
+            ->update(['is_locked' => false]);
+
+        return back()->with('success', "$count siswa berhasil dibuka kuncinya.");
+    }
+
+    public function updateMaxAttempts(Request $request, $id)
+    {
+        $session = ExamSession::findOrFail($id);
+        $session->update(['max_login_attempts' => max(1, (int) $request->input('max_login_attempts', 1))]);
+        return back()->with('success', 'Maks upaya login diperbarui menjadi ' . $session->max_login_attempts . 'x.');
+    }
+
+    public function exportResults($id)
+    {
+        $session = ExamSession::with(['sessionGroups.students', 'questionGroups.rombels'])->findOrFail($id);
+        $sessionStudents = ExamSessionStudent::where('exam_session_id', $id)->with('student')->get();
+
+        // Build maps
+        $studentGroupMap = [];
+        foreach ($session->sessionGroups as $group) {
+            foreach ($group->students as $student) {
+                $studentGroupMap[$student->id] = $group->nama_kelompok;
+            }
+        }
+
+        // Get results
+        $results = \App\Models\ExamResult::where('exam_session_id', $id)->get()->keyBy('student_id');
+
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Hasil Ujian');
+
+        // Headers
+        $headers = ['No', 'Nama', 'NISN', 'Kelas', 'Kelompok Tes', 'Status', 'Waktu Mulai', 'Waktu Selesai', 'Skor (%)'];
+        foreach ($headers as $i => $h) {
+            $col = chr(65 + $i);
+            $sheet->setCellValue($col . '1', $h);
+            $sheet->getStyle($col . '1')->getFont()->setBold(true);
+            $sheet->getStyle($col . '1')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setRGB('4472C4');
+            $sheet->getStyle($col . '1')->getFont()->getColor()->setRGB('FFFFFF');
+        }
+
+        // Data
+        $row = 2;
+        $no = 1;
+        foreach ($sessionStudents as $ss) {
+            $student = $ss->student;
+            if (!$student) continue;
+            $result = $results->get($ss->student_id);
+            $status = $ss->status === 'mengerjakan' ? 'Mengerjakan' : ($ss->status === 'selesai' ? 'Selesai' : 'Belum Mulai');
+
+            $sheet->setCellValue('A' . $row, $no);
+            $sheet->setCellValue('B' . $row, $student->nama ?? '-');
+            $sheet->setCellValueExplicit('C' . $row, $student->nisn ?? '-', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+            $sheet->setCellValue('D' . $row, $student->kelas ?? '-');
+            $sheet->setCellValue('E' . $row, $studentGroupMap[$ss->student_id] ?? '-');
+            $sheet->setCellValue('F' . $row, $status);
+            $sheet->setCellValue('G' . $row, $ss->waktu_mulai ? \Carbon\Carbon::parse($ss->waktu_mulai)->format('H:i:s') : '-');
+            $sheet->setCellValue('H' . $row, $ss->waktu_selesai ? \Carbon\Carbon::parse($ss->waktu_selesai)->format('H:i:s') : '-');
+            $sheet->setCellValue('I' . $row, $result ? $result->skor . '%' : '-');
+
+            $row++;
+            $no++;
+        }
+
+        // Auto width
+        foreach (range('A', 'I') as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        $filename = 'Hasil_Ujian_' . str_replace(' ', '_', $session->nama_sesi) . '.xlsx';
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+
+        return response()->streamDownload(function () use ($writer) {
+            $writer->save('php://output');
+        }, $filename, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ]);
     }
 
     public function lockStudent($id, $studentId)

@@ -9,7 +9,7 @@ class ExamSession extends Model
 {
     protected $fillable = [
         'exam_id', 'exam_activity_id', 'nama_sesi', 'durasi', 'token',
-        'waktu_mulai', 'waktu_selesai', 'status'
+        'waktu_mulai', 'waktu_selesai', 'status', 'max_login_attempts'
     ];
 
     protected function casts(): array

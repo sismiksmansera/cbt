@@ -54,8 +54,9 @@ class ExamController extends Controller
             'durasi' => 'nullable|integer|min:1',
         ]);
 
-        $data = $request->only('kategori', 'subject_id', 'deskripsi', 'durasi', 'passing_grade', 'show_result');
+        $data = $request->only('kategori', 'subject_id', 'deskripsi', 'durasi', 'passing_grade');
         $data['agama'] = $request->input('agama') ?: null;
+        $data['show_result'] = $request->has('show_result');
         $data['shuffle_questions'] = $request->has('shuffle_questions');
         $data['shuffle_options'] = $request->has('shuffle_options');
         $data['is_active'] = $request->has('is_active');
