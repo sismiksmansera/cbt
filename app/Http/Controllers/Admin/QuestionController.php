@@ -307,7 +307,8 @@ class QuestionController extends Controller
                 $content .= $this->extractCellContent($child);
             }
         } elseif (method_exists($element, 'getText')) {
-            $content .= $element->getText() ?? '';
+            $text = $element->getText() ?? '';
+            $content .= is_array($text) ? implode('', $text) : $text;
         }
 
         return $content;
